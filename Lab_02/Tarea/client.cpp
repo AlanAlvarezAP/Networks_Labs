@@ -1,4 +1,4 @@
- /* Client code in C */
+  /* Client code in C */
  
   #include <sys/types.h>
   #include <sys/socket.h>
@@ -11,39 +11,81 @@
 
   #include <iostream>
   #include <string>
+  #include <thread>
 
-  void  number_to_char(int number,char result[]){
+  std::string number_to_string(int number){
+     std::string result(3,' ');
      int count=2;
 
      if (number < 0){
-	number=-number;
+		number=-number;
      }
      
      while(number > 0){
-	int division=number%10;
-	result[count--]=division+'0';
-	number/=10;
+		int division=number%10;
+		result[count--]=division+'0';
+		number/=10;
      }
 
      while(count >= 0){
-	result[count--]='0';
+		result[count--]='0';
      }
-
+     return result;
 
   }
  
+  void write_thread(int n,int SocketFD){
+	 std::string size_name,name,size_msg,msg;
+	 std::cout << "nickname of the destination: ";
+	 std::getline(std::cin,name);
+	 std::cout << "enter msg: ";
+	 std::getline(std::cin,msg);
+
+	 size_name=number_to_string((int)name.size());
+	 size_msg=number_to_string((int)msg.size());
+
+	 std::string final_msg=size_name+name+size_msg+msg;
+	 
+	 n = write(SocketFD,final_msg.data(),final_msg.size());
+     
+  }
+
+  void read_thread(char buffer[],int n,int SocketFD){
+     int size_name,size_msg;
+     char name[256],msg[256];
+
+	 bzero(buffer,256);
+	 bzero(name,256);
+	 bzero(msg,256);
+
+	 n = read(SocketFD,buffer,3);
+	 buffer[n]='\0';
+	 size_name=std::atoi(buffer);
+		 
+	 n = read(SocketFD,buffer,size_name);
+	 buffer[n]='\0';  
+	 strcpy(name,buffer);
+	
+	 n = read(SocketFD,buffer,3);
+	 buffer[n]='\0';
+	 size_msg=std::atoi(buffer);
+	
+	 n = read(SocketFD,buffer,size_msg);
+	 buffer[n]='\0';
+	 strcpy(msg,buffer);
+	
+	 std::cout << "msg from: " << name << std::endl;
+	 std::cout << "msg: " << msg << std::endl;
+     
+  }
+
   int main(void)
   {
     struct sockaddr_in stSockAddr;
     int Res;
     char buffer[256];
-    char buffer_2[256];
     int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     int n;
- 
-    char test[3];
-    number_to_char(999,test);
-    printf("%s\n",test);
 
     if (-1 == SocketFD)
     {
@@ -76,18 +118,12 @@
       close(SocketFD);
       exit(EXIT_FAILURE);
     }
-    for(;;){
-      bzero(buffer_2,256);
-      bzero(buffer,256);
-      printf("Message to the server -> ");
-      fgets(buffer_2,sizeof(buffer_2),stdin);
-      buffer_2[strcspn(buffer_2,"\n")]='\0';
-      n = write(SocketFD,(void*)buffer_2,strlen(buffer_2));
-      /* perform read write operations ... */
-      n = read(SocketFD,buffer,255);
-      buffer[n]='\0';
-      printf("Server: [%s]\n",buffer);
-    }
+
+	for(;;){
+		write_thread(n,SocketFD);
+		read_thread(buffer,n,SocketFD);
+	}
+   
     shutdown(SocketFD, SHUT_RDWR);
     close(SocketFD);
     return 0;
