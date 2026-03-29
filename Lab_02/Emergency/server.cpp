@@ -1,4 +1,4 @@
-  /* Server code in C */
+    /* Server code in C */
  
   #include <sys/types.h>
   #include <sys/socket.h>
@@ -37,22 +37,19 @@
   void write_thread(int n,int SocketFD){
      std::string size_name,name,size_msg,msg;
 
-	 for(;;){
 		 std::cout << "nickname of the destination: ";
-	     std::getline(std::cin,name);
-	
-	     std::cout << "enter msg: ";
-	     std::getline(std::cin,msg);
-	
-	
-	     size_name=number_to_string((int)name.size());
-	     size_msg=number_to_string((int)msg.size());
-	
-	     std::string final_msg=size_name+name+size_msg+msg;
-	     
-	     n = write(SocketFD,final_msg.data(),final_msg.size());
+     std::getline(std::cin,name);
 
-	 }
+     std::cout << "enter msg: ";
+     std::getline(std::cin,msg);
+
+
+     size_name=number_to_string((int)name.size());
+     size_msg=number_to_string((int)msg.size());
+
+     std::string final_msg=size_name+name+size_msg+msg;
+     
+     n = write(SocketFD,final_msg.data(),final_msg.size());
      
   }
 
@@ -60,29 +57,29 @@
      int size_name,size_msg;
      char name[256],msg[256];
 
-	 for(;;){
+
 		 bzero(buffer,256);
-	     bzero(name,256);
-	     bzero(msg,256);
-	     n = read(SocketFD,buffer,3);
-	     buffer[n]='\0';
-	     size_name=std::atoi(buffer);
-		     
-	     n = read(SocketFD,buffer,size_name);
-	     buffer[n]='\0';  
-	     strcpy(name,buffer);
-		
-	     n = read(SocketFD,buffer,3);
-	     buffer[n]='\0';
-	     size_msg=std::atoi(buffer);
-		
-	     n = read(SocketFD,buffer,size_msg);
-	     buffer[n]='\0';
-	     strcpy(msg,buffer);
-		
-	     std::cout << "msg from: " << name << std::endl;
-	     std::cout << "msg: " << msg << std::endl;
-	 }
+     bzero(name,256);
+     bzero(msg,256);
+     n = read(SocketFD,buffer,3);
+     buffer[n]='\0';
+     size_name=std::atoi(buffer);
+       
+     n = read(SocketFD,buffer,size_name);
+     buffer[n]='\0';  
+     strcpy(name,buffer);
+  
+     n = read(SocketFD,buffer,3);
+     buffer[n]='\0';
+     size_msg=std::atoi(buffer);
+  
+     n = read(SocketFD,buffer,size_msg);
+     buffer[n]='\0';
+     strcpy(msg,buffer);
+  
+     std::cout << "msg from: " << name << std::endl;
+     std::cout << "msg: " << msg << std::endl;
+
      
   }
 
@@ -120,9 +117,10 @@
     }
     
     int ClientFD=accept(ServerFD,NULL,NULL);
-    std::thread (read_thread,buffer,n,ClientFD).detach();
-    std::thread writer(write_thread,n,ClientFD);
-    writer.join();
+    for(;;){
+      read_thread(buffer,n,ClientFD);
+      writer_thread(n,ClientFD);
+    }
  
    shutdown(ClientFD, SHUT_RDWR);
  
