@@ -8,7 +8,78 @@
   #include <stdlib.h>
   #include <string.h>
   #include <unistd.h>
- 
+
+  #include <iostream>
+  #include <string>
+  #include <thread>
+
+  std::string number_to_string(int number){
+     std::string result(3);
+     int count=2;
+
+     if (number < 0){
+	      number=-number;
+     }
+     
+     while(number > 0){
+	      int division=number%10;
+	      result[count--]=division+'0';
+	      number/=10;
+     }
+
+     while(count >= 0){
+	      result[count--]='0';
+     }
+     return result;
+
+  }
+
+  void write_thread(int &n,int SocketFD){
+     std::string size_name,name,size_msg,msg;
+
+     std::cout << "nickname of destination: ";
+     std::getline(std::cin,name);
+     std::cout << std::endl;
+     std::cout << "enter msg: ";
+     std::getline(std::cin,msg);
+     std::cout << std::endl;
+
+     size_name=number_to_string((int)name.size());
+     size_msg=number_to_string((int)msg.size());
+
+     std::string final_msg=size_name+name+size_msg+msg;
+     
+     n = write(SocketFD,final_msg.data(),final_msg.size());
+
+  }
+
+  void read_thread(char buffer[],int &n,int SocketFD){
+	   for(;;){
+		   int size_name,size_msg;
+	     std::string name,msg;
+	
+	     bzero(buffer,256);
+	     n = read(SocketFD,buffer,3);
+	     buffer[n]='\0';
+	     size_name=std::atoi(buffer);
+	     
+	     n = read(SocketFD,buffer,size_name);
+	     buffer[n]='\0';  
+	     strcpy(name,buffer);
+	
+	     n = read(SocketFD,buffer,3);
+	     buffer[n]='\0';
+	     size_msg=std::atoi(buffer);
+	
+	     n = read(SocketFD,buffer,size_msg);
+	     buffer[n]='\0';
+	     strcpy(msg,buffer);
+	
+	     std::cout << "msg from: " << name << std::endl;
+	     std::cout << "msg: " << msg << std::endl;
+	   }
+  }
+
   int main(void)
   {
     struct sockaddr_in stSockAddr;
@@ -43,24 +114,13 @@
     }
     
     int ClientFD=accept(ServerFD,NULL,NULL);
-    for(;;)
-    {
- 
-      bzero(buffer,256);
-      n = read(ClientFD,buffer,255);
-      if (n < 0) perror("ERROR reading from socket");
-      buffer[n]='\0';
-      printf("Client: [%s]\n",buffer);
+    std::thread listener(read_thread,buffer,n,SocketFD).detach();
 
-      char buffer_2[256];
-      bzero(buffer_2,256);
-      printf("Message to the client -> ");
-      fgets(buffer_2,sizeof(buffer_2),stdin);
-      buffer_2[strcspn(buffer_2,"\n")]='\0';
-      n = write(ClientFD,(void*)buffer_2,strlen(buffer_2));
-      if (n < 0) perror("ERROR writing to socket");
- 
-   }
+    for(;;){
+      std::thread writer(write_thread,n,SocketFD);
+
+      writer.join();
+    }
  
    shutdown(ClientFD, SHUT_RDWR);
  
