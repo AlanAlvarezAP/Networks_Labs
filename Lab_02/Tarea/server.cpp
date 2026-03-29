@@ -119,7 +119,7 @@
     int ClientFD=accept(ServerFD,NULL,NULL);
     for(;;){
       read_thread(buffer,n,ClientFD);
-      writer_thread(n,ClientFD);
+      write_thread(n,ClientFD);
     }
  
    shutdown(ClientFD, SHUT_RDWR);
