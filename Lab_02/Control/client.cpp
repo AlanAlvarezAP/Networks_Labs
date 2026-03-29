@@ -54,29 +54,30 @@
   }
 
   void read_thread(char buffer[],int &n,int SocketFD){
-     int size_name,size_msg;
-     std::string name,msg;
-
-     bzero(buffer,256);
-     n = read(SocketFD,buffer,3);
-     buffer[n]='\0';
-     size_name=std::atoi(buffer);
-     
-     n = read(SocketFD,buffer,size_name);
-     buffer[n]='\0';  
-     strcpy(name,buffer);
-
-     n = read(SocketFD,buffer,3);
-     buffer[n]='\0';
-     size_msg=std::atoi(buffer);
-
-     n = read(SocketFD,buffer,size_msg);
-     buffer[n]='\0';
-     strcpy(msg,buffer);
-
-     std::cout << "msg from: " << name << std::endl;
-     std::cout << "msg: " << msg << std::endl;
-
+	 for(;;){
+		 int size_name,size_msg;
+	     std::string name,msg;
+	
+	     bzero(buffer,256);
+	     n = read(SocketFD,buffer,3);
+	     buffer[n]='\0';
+	     size_name=std::atoi(buffer);
+	     
+	     n = read(SocketFD,buffer,size_name);
+	     buffer[n]='\0';  
+	     strcpy(name,buffer);
+	
+	     n = read(SocketFD,buffer,3);
+	     buffer[n]='\0';
+	     size_msg=std::atoi(buffer);
+	
+	     n = read(SocketFD,buffer,size_msg);
+	     buffer[n]='\0';
+	     strcpy(msg,buffer);
+	
+	     std::cout << "msg from: " << name << std::endl;
+	     std::cout << "msg: " << msg << std::endl;
+	 }
   }
 
   int main(void)
