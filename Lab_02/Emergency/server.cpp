@@ -119,7 +119,7 @@
     int ClientFD=accept(ServerFD,NULL,NULL);
   	std::thread (read_thread,buffer,n,ClientFD).detach();
     for(;;){
-      writer_thread(n,ClientFD);
+      write_thread(n,ClientFD);
     }
  
    shutdown(ClientFD, SHUT_RDWR);
