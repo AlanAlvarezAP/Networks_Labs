@@ -35,48 +35,53 @@
   }
  
   void write_thread(int n,int SocketFD){
-     std::string size_name,name,size_msg,msg;
-
-     std::cout << "nickname of the destination: ";
-     std::getline(std::cin,name);
-     std::cout << "enter msg: ";
-     std::getline(std::cin,msg);
-
-     size_name=number_to_string((int)name.size());
-     size_msg=number_to_string((int)msg.size());
-
-     std::string final_msg=size_name+name+size_msg+msg;
+	 for(;;){
+		 std::string size_name,name,size_msg,msg;
+	     std::cout << "nickname of the destination: ";
+	     std::getline(std::cin,name);
+	     std::cout << "enter msg: ";
+	     std::getline(std::cin,msg);
+	
+	     size_name=number_to_string((int)name.size());
+	     size_msg=number_to_string((int)msg.size());
+	
+	     std::string final_msg=size_name+name+size_msg+msg;
+	     
+	     n = write(SocketFD,final_msg.data(),final_msg.size());
+	 }
      
-     n = write(SocketFD,final_msg.data(),final_msg.size());
 
   }
 
   void read_thread(char buffer[],int n,int SocketFD){
      int size_name,size_msg;
      char name[256],msg[256];
-	
-     bzero(buffer,256);
-     bzero(name,256);
-     bzero(msg,256);
 
-     n = read(SocketFD,buffer,3);
-     buffer[n]='\0';
-     size_name=std::atoi(buffer);
-	     
-     n = read(SocketFD,buffer,size_name);
-     buffer[n]='\0';  
-     strcpy(name,buffer);
+	 for(;;){
+		 bzero(buffer,256);
+	     bzero(name,256);
+	     bzero(msg,256);
 	
-     n = read(SocketFD,buffer,3);
-     buffer[n]='\0';
-     size_msg=std::atoi(buffer);
-	
-     n = read(SocketFD,buffer,size_msg);
-     buffer[n]='\0';
-     strcpy(msg,buffer);
-	
-     std::cout << "msg from: " << name << std::endl;
-     std::cout << "msg: " << msg << std::endl;
+	     n = read(SocketFD,buffer,3);
+	     buffer[n]='\0';
+	     size_name=std::atoi(buffer);
+		     
+	     n = read(SocketFD,buffer,size_name);
+	     buffer[n]='\0';  
+	     strcpy(name,buffer);
+		
+	     n = read(SocketFD,buffer,3);
+	     buffer[n]='\0';
+	     size_msg=std::atoi(buffer);
+		
+	     n = read(SocketFD,buffer,size_msg);
+	     buffer[n]='\0';
+	     strcpy(msg,buffer);
+		
+	     std::cout << "msg from: " << name << std::endl;
+	     std::cout << "msg: " << msg << std::endl;
+	 }
+     
   }
 
   int main(void)
@@ -119,13 +124,12 @@
       exit(EXIT_FAILURE);
     }
 
-    std::thread(read_thread,buffer,n,SocketFD).detach();
+	std::thread(read_thread,buffer,n,SocketFD).detach();
+ 	std::thread writer(write_thread,n,SocketFD);
+    writer.join();
+    
 
-    for(;;){
-      std::thread writer(write_thread,n,SocketFD);
-
-      writer.join();
-    }
+   
     shutdown(SocketFD, SHUT_RDWR);
     close(SocketFD);
     return 0;
