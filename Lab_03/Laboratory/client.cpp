@@ -72,7 +72,7 @@
       buffer[n]='\0';
       strcpy(msg,buffer);
 
-      std::cout << "msg with destion to: " << name  << " -> " << msg << std::endl;
+      std::cout << "msg with destination to: " << name  << " -> " << msg << std::endl;
     }
      
   }
