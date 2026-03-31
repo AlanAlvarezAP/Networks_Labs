@@ -15,23 +15,24 @@
 
 
   std::string number_to_string(int number){
-     std::string result(3,' ');
-     int count=2;
+    std::string result(3,' ');
+    int count=2;
 
-     if (number < 0){
-		number=-number;
-     }
+    if (number < 0){
+		  number=-number;
+    }
      
-     while(number > 0){
-		int division=number%10;
-		result[count--]=division+'0';
-		number/=10;
-     }
+    while(number > 0){
+		  int division=number%10;
+		  result[count--]=division+'0';
+		  number/=10;
+    }
 
-     while(count >= 0){
-		result[count--]='0';
-     }
-     return result;
+    while(count >= 0){
+		  result[count--]='0';
+    }
+
+    return result;
 
   }
  
@@ -43,16 +44,15 @@
 
     size_name=number_to_string((int)name.size());
     size_msg=number_to_string((int)msg.size());
-
     std::string final_msg=size_name+name+size_msg+msg;
-    
+
     n = write(SocketFD,final_msg.data(),final_msg.size());
      
   }
 
-  void read_thread(char buffer[],int n,int SocketFD){
+  void read_thread(int n,int SocketFD){
     int size_name,size_msg;
-    char name[256],msg[256];
+    char buffer[256],name[256],msg[256];
     for(;;){
       bzero(buffer,256);
       bzero(name,256);
@@ -60,21 +60,19 @@
       n = read(SocketFD,buffer,3);
       buffer[n]='\0';
       size_name=std::atoi(buffer);
-        
       n = read(SocketFD,buffer,size_name);
       buffer[n]='\0';  
       strcpy(name,buffer);
-  
+
       n = read(SocketFD,buffer,3);
       buffer[n]='\0';
       size_msg=std::atoi(buffer);
-  
+
       n = read(SocketFD,buffer,size_msg);
       buffer[n]='\0';
       strcpy(msg,buffer);
-  
-      std::cout << "msg from: " << name << std::endl;
-      std::cout << "msg: " << msg << std::endl;
+
+      std::cout << "msg with destination to: " << name  << " -> " << msg << std::endl;
     }
      
   }
@@ -82,7 +80,6 @@
   int main(void)
   {
     struct sockaddr_in stSockAddr;
-    char buffer[256];
     int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
     int n;
 
@@ -94,10 +91,15 @@
  
     connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
-    std::thread(read_thread,buffer,n,SocketFD).detach();
+    std::string own_nickname;
+    std::cout << "Give me your nickname :D -> ";
+    std::getline(std::cin,own_nickname);
+
+    n = write(SocketFD,own_nickname.data(),own_nickname.size());
+
+    std::thread(read_thread,n,SocketFD).detach();
     for(;;){
       std::string msg;
-      std::cout << "nickname of the destination: ";
       std::getline(std::cin,msg);
       if(msg == "exit"){
         break;
