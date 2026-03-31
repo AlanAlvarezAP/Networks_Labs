@@ -40,13 +40,14 @@
   void read_thread(char buffer[],int n,int SocketFD){
     int size_name,size_msg;
     char name[256],msg[256];
-
+    std::string size_save_name,size_save_msg;
 
     bzero(buffer,256);
     bzero(name,256);
     bzero(msg,256);
     n = read(SocketFD,buffer,3);
     buffer[n]='\0';
+    size_save_name=buffer;
     size_name=std::atoi(buffer);
       
     n = read(SocketFD,buffer,size_name);
@@ -55,14 +56,15 @@
 
     n = read(SocketFD,buffer,3);
     buffer[n]='\0';
+    size_save_msg=buffer;
     size_msg=std::atoi(buffer);
 
     n = read(SocketFD,buffer,size_msg);
     buffer[n]='\0';
     strcpy(msg,buffer);
 
-    std::string final_msg=std::to_string(size_name)+std::string{name}+std::to_string(size_msg)+std::string{msg};
-    
+    std::string final_msg=size_save_name+std::string{name}+size_save_msg+std::string{msg};
+
     for(auto p:mapita){
       write(p.second,final_msg.data(),final_msg.size());
     }
@@ -92,6 +94,7 @@
       read(ClientFD,buffer,255);
       std::string nickname=std::string{buffer};
       mapita[nickname]=ClientFD;
+
       std::thread (read_thread,buffer,n,ClientFD).detach();
     }
  
