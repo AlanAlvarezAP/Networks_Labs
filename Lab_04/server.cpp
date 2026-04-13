@@ -4,7 +4,6 @@
 Server_Protocols sv;
 
 void read_thread(int n,int SocketFD){
-    std::cout << "THREAD INICIADO CON SocketFD " << SocketFD << std::endl;
     char buffer;
     for(;;){
         n = read(SocketFD, &buffer, 1);
@@ -37,7 +36,6 @@ int main(void){
     int ClientFD=0;
     for(;;){
         ClientFD=accept(ServerFD,NULL,NULL);
-	std::cout << "ACCEPT - ClientFD: " << ClientFD << "with port " << stSockAddr.sin_port << std::endl;
         std::thread (read_thread,n,ClientFD).detach();
     }
  
