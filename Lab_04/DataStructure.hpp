@@ -48,6 +48,17 @@ class Server_Protocols {
 public:
 	std::unordered_map<std::string, int> little_map;
 
+	void Remove_Client(int SocketFD) {
+		for (auto it = little_map.begin(); it != little_map.end(); ++it) {
+			if (it->second == SocketFD) {
+				little_map.erase(it);
+				close(SocketFD);
+				print_map(little_map);
+				return;
+			}
+		}
+	}
+
 	std::string Login(int n, int SocketFD) {
 		char buffer[256];
 

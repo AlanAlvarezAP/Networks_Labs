@@ -9,7 +9,7 @@ void read_thread(int n,int SocketFD){
         n = read(SocketFD, &buffer, 1);
         if (n <= 0) {
             std::cout << "Disconection from client closing..." << std::endl;
-            sv.Cases_Server('O', n, SocketFD);
+            sv.Remove_Client(SocketFD);
             break;
         }
         sv.Cases_Server(buffer, n, SocketFD);

@@ -53,8 +53,9 @@ void read_thread(int n,int SocketFD){
         if (n <= 0) {
             std::cout << "Disconection from server closing..." << std::endl;
             close(SocketFD);
-	    clp.running=false;
-	    clp.logging_status=false;
+	        clp.running=false;
+	        clp.logging_status=false;
+            exit(0);
             break;
         }
         clp.Cases_Client(buffer, n, SocketFD);
