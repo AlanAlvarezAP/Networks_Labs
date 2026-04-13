@@ -7,6 +7,11 @@ void read_thread(int n,int SocketFD){
     char buffer;
     for(;;){
         n = read(SocketFD, &buffer, 1);
+        if (n <= 0) {
+            std::cout << "Ilegal disconection from client closing..." << std::endl;
+            sv.Cases_Server('O', n, SocketFD);
+            break;
+        }
         sv.Cases_Server(buffer, n, SocketFD);
     }
     
@@ -30,10 +35,10 @@ int main(void){
     
     int ClientFD=0;
     for(;;){
-      ClientFD=accept(ServerFD,NULL,NULL);
-      sv.Cases_Server('L', n, ClientFD);
+        ClientFD=accept(ServerFD,NULL,NULL);
+        sv.Cases_Server('L', n, ClientFD);
 
-      std::thread (read_thread,n,ClientFD).detach();
+        std::thread (read_thread,n,ClientFD).detach();
     }
  
     shutdown(ClientFD, SHUT_RDWR);

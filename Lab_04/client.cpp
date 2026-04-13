@@ -8,9 +8,10 @@ void print_menu() {
     std::cout << "|          Welcome to             |" << std::endl;
     std::cout << "|        Chat Simulation          |" << std::endl;
     std::cout << "|                                 |" << std::endl;
-    std::cout << "|  1. Logout                      |" << std::endl;
-    std::cout << "|  2. Broadcast                   |" << std::endl;
-    std::cout << "|  3. Unicast                     |" << std::endl;
+    std::cout << "|  1. Login                       |" << std::endl;
+    std::cout << "|  2. Logout                      |" << std::endl;
+    std::cout << "|  3. Broadcast                   |" << std::endl;
+    std::cout << "|  4. Unicast                     |" << std::endl;
     /*std::cout << "|  f. Rotar inverso (0.1)         |" << std::endl;
     std::cout << "|  g. Escalar (1.1)               |" << std::endl;
     std::cout << "|  h. Escalar inverso (0.9)       |" << std::endl;
@@ -27,13 +28,16 @@ void print_menu() {
 
 char Cast_Option(int option){
 	switch(option){
-		case 1:{
+        case 1: {
+            return 'L';
+        }
+		case 2:{
 			return 'O';
 		}
-		case 2:{
+		case 3:{
 			return 'B';
 		}
-		case 3:{
+		case 4:{
 			return 'b';
 		}
 		default:{
@@ -46,6 +50,11 @@ void read_thread(int n,int SocketFD){
     char buffer;
     for (;;) {
         n = read(SocketFD, &buffer, 1);
+        if (n <= 0) {
+            std::cout << "Ilegal disconection from server closing..." << std::endl;
+            close(SocketFD);
+            break;
+        }
         clp.Cases_Client(buffer, n, SocketFD);
     }
      
@@ -64,15 +73,22 @@ int main(void){
  
     connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
-    clp.Cases_Client('L', n, SocketFD);
+    print_menu();
 
     std::thread(read_thread,n,SocketFD).detach();
     for(;;){
-        print_menu();
         std::cout << "SELECT AN ACTION :D " << std::endl;
         int action;
         std::cin >> action;
-        clp.Cases_Client(Cast_Option(action), n, SocketFD);
+        char option = Cast_Option(action);
+
+        if (option != 'L' && clp.logging_status = false) {
+            std::cout << "You are not logged in, try logging pls :D" << std::endl;
+            print_menu();
+            continue;
+        }
+
+        clp.Cases_Client(option, n, SocketFD);
     }
    
     shutdown(SocketFD, SHUT_RDWR);

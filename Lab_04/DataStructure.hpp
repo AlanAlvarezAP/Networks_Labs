@@ -92,6 +92,8 @@ public:
 						little_map.erase(it);
 						char k = 'K';
 						write(SocketFD, &k, 1);
+						shutdown(SocketFD, SHUT_RDWR);
+						close(SocketFD);
 						print_map(little_map);
 						return;
 					}
@@ -115,6 +117,7 @@ public:
 
 class Client_Protocols {
 public:
+	bool logging_status = false;
 	void Error(int n, int SocketFD) {
 		char buffer[256];
 
@@ -154,10 +157,12 @@ public:
 			}
 			case 'K': {
 				std::cout << "All good OK " << std::endl;
+				loging_status = true;
 				break;
 			}
 			case 'E': {
 				Error(n, SocketFD);
+				loging_status = false;
 				break;
 			}
 
