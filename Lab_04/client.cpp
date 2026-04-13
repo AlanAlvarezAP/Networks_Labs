@@ -27,7 +27,6 @@ void print_menu() {
 }
 
 char Cast_Option(int option){
-	std::cout << " SE ENTRO AL CAST CON " << option << std::endl;
 	switch(option){
         	case 1: {
             		return 'L';
@@ -77,6 +76,8 @@ int main(void){
  
     	connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
+	std::cout << "CREANDO NUEVO CLIENTE CON SOCKET " << SocketFD << std::endl;
+
 	clp.logging_status=false; 
 	clp.running=true;
     	print_menu();
@@ -88,16 +89,15 @@ int main(void){
         	std::cin >> action;
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         	char option = Cast_Option(action);
-		std::cout << "ACTION ES " << action << " Y CASTEADO " << option << std::endl;
         	if (option != 'L' && clp.logging_status == false) {
             		std::cout << "You are not logged in, try logging pls :D" << std::endl;
             		print_menu();
             		continue;
         	}
-		std::cout << "Mandando el socket " << SocketFD << std::endl;
+		std::cout << "Previous flags " << clp.logging_status << " AND FOR RUNNING " << clp.running << std::endl;
         	clp.Cases_Client(option, n, SocketFD);
-		if(!clp.logging_status || !clp.running){
-			std::cout << "BREAKING CONNECTION " << clp.logging_status << " AND RUNNING " << clp.running << std::endl;
+		std::cout << "POST flags " << clp.logging_status << " AND FOR RUNNING " << clp.running << std::endl;
+		if(option != 'L' && (!clp.logging_status || !clp.running)){
 			break;
 		}
     	}

@@ -59,15 +59,14 @@ public:
 		int size_name = std::atoi(buffer);
 
 		n = read(SocketFD, buffer, size_name);
-		std::cout << "LOGIN - SocketFD: " << SocketFD << " nombre: " << buffer << std::endl;
+
 		return buffer;
 
 	}
 
 	void Cases_Server(char type, int n, int SocketFD) {
-		std::cout << " SE ENTRO EL TIPO " << type << std::endl;
 		switch (type) {
-			case 'L': {
+			case 'L':{
 				std::string nickname = Login(n, SocketFD);
 				if (little_map.find(nickname) != little_map.end()) {
 					std::string error_msg = "ERROR nickname already in server";
@@ -87,11 +86,8 @@ public:
 			}
 			
 			case 'O': {
-				std::cout << "LOGOUT - SocketFD recibido: " << SocketFD << std::endl;
 				for (auto it = little_map.begin(); it != little_map.end(); ++it) {
-					std::cout << " A BUSCAR " << SocketFD << " VALOR FOR -> " << it->second << std::endl;
 					if (it->second == SocketFD) {
-						std::cout << "SE ENCONTRO" << std::endl;
 						little_map.erase(it);
 						char k = 'K';
 						write(SocketFD, &k, 1);
@@ -142,7 +138,6 @@ public:
 		std::getline(std::cin, name);
 		int size_msg = name.size();
 		std::string final_msg = "L" + number_to_string(size_msg, 4) + name;
-		std::cout << "Sending... " << final_msg << std::endl;
 		write(SocketFD, final_msg.data(), final_msg.size());
 
 	}
@@ -160,10 +155,11 @@ public:
 			}
 			case 'K': {
 				std::cout << "All good OK " << std::endl;
-				logging_status = true;
+				logging_status = !logging_status;
 				break;
 			}
 			case 'E': {
+				std::cout << " POSIBILIDAD 1 de ERROR EN CASES CLIENT " << std::endl;
 				Error(n, SocketFD);
 				logging_status = false;
 				break;
