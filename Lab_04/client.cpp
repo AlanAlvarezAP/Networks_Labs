@@ -28,9 +28,9 @@ void print_menu() {
 
 char Cast_Option(int option){
 	switch(option){
-        	case 1: {
-            		return 'L';
-        	}
+        case 1: {
+            	return 'L';
+        }
 		case 2:{
 			return 'O';
 		}
@@ -38,7 +38,7 @@ char Cast_Option(int option){
 			return 'B';
 		}
 		case 4:{
-			return 'b';
+			return 'U';
 		}
 		default:{
 			return 'z';
