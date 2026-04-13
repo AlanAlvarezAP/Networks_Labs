@@ -70,7 +70,7 @@ public:
 		int size_name = std::atoi(buffer);
 
 		n = read(SocketFD, buffer, size_name);
-
+		buffer[n]='\0';
 		return buffer;
 
 	}
