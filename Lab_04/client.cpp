@@ -97,6 +97,7 @@ int main(void){
 		std::cout << "Mandando el socket " << SocketFD << std::endl;
         	clp.Cases_Client(option, n, SocketFD);
 		if(!clp.logging_status || !clp.running){
+			std::cout << "BREAKING CONNECTION " << clp.logging_status << " AND RUNNING " << clp.running << std::endl;
 			break;
 		}
     	}
