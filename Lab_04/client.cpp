@@ -46,7 +46,7 @@ void read_thread(int n,int SocketFD){
     char buffer;
     for (;;) {
         n = read(SocketFD, &buffer, 1);
-        rcv.Receive_Protocol(buffer, n, SocketFD);
+        clp.Cases_Client(buffer, n, SocketFD);
     }
      
 }
@@ -64,7 +64,7 @@ int main(void){
  
     connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
-    snd.Send_Protocol('L', n, SocketFD);
+    clp.Cases_Client('L', n, SocketFD);
 
     std::thread(read_thread,n,SocketFD).detach();
     for(;;){

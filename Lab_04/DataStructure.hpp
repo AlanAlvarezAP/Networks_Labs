@@ -1,5 +1,4 @@
 #pragma once
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -35,13 +34,9 @@ std::string number_to_string(int number,int size) {
 
 }
 
-void print_map(std::unordered_map<std::string,int>* little_map=nullptr){
-	if(!little_map){
-		std::cout << "NO MAP" << std::endl;
-		return;
-	}
+void print_map(std::unordered_map<std::string,int> little_map){
 	std::cout << "------------------------------------------MAP STATE -----------------------------" << std::endl;
-	for(auto &p:*little_map){
+	for(auto &p:little_map){
 		std::cout << " We have person " << p.first << " with socket " << p.second << std::endl;
 	}
 	std::cout << "---------------------------------------------------------------------------------" << std::endl;
@@ -74,14 +69,14 @@ public:
 		switch (type) {
 			case 'L': {
 				std::string nickname = Login(n, SocketFD);
-				if (little_map && little_map->find(nickname) != little_map->end()) {
+				if (little_map.find(nickname) != little_map.end()) {
 					std::string error_msg = "ERROR nickname already in server";
 					int size_error = error_msg.size();
 					std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
 					write(SocketFD, final_msg.data(), final_msg.size());
 				}
 				else {
-					(*little_map)[nickname] = SocketFD;
+					little_map[nickname] = SocketFD;
 					char k = 'K';
 					write(SocketFD, &k, 1);
 				}
@@ -92,15 +87,9 @@ public:
 			}
 			
 			case 'O': {
-				if (!little_map) {
-					std::string error_msg = "ERROR loginout";
-					int size_error = error_msg.size();
-					std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
-					write(SocketFD, final_msg.data(), final_msg.size());
-				}
-				for (auto it = little_map->begin(); it != little_map->end(); ++it) {
+				for (auto it = little_map.begin(); it != little_map.end(); ++it) {
 					if (it->second == SocketFD) {
-						little_map->erase(it);
+						little_map.erase(it);
 						char k = 'K';
 						write(SocketFD, &k, 1);
 						print_map(little_map);
@@ -125,7 +114,7 @@ public:
 };
 
 class Client_Protocols {
-
+public:
 	void Error(int n, int SocketFD) {
 		char buffer[256];
 
