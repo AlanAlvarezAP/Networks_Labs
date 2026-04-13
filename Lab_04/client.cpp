@@ -94,9 +94,13 @@ int main(void){
             		print_menu();
             		continue;
         	}
-		std::cout << "Previous flags " << clp.logging_status << " AND FOR RUNNING " << clp.running << std::endl;
         	clp.Cases_Client(option, n, SocketFD);
-		std::cout << "POST flags " << clp.logging_status << " AND FOR RUNNING " << clp.running << std::endl;
+
+		if(option == 'O'){
+			clp.logging_status=false;
+			clp.running=false;
+		}
+
 		if(option != 'L' && (!clp.logging_status || !clp.running)){
 			break;
 		}

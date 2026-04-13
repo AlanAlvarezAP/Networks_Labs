@@ -155,11 +155,10 @@ public:
 			}
 			case 'K': {
 				std::cout << "All good OK " << std::endl;
-				logging_status = !logging_status;
+				logging_status = true;
 				break;
 			}
 			case 'E': {
-				std::cout << " POSIBILIDAD 1 de ERROR EN CASES CLIENT " << std::endl;
 				Error(n, SocketFD);
 				logging_status = false;
 				break;
