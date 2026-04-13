@@ -4,15 +4,15 @@
 Protocols_Receivers rcv;
 Protocols_Senders snd;
  
+
 void print_menu() {
     std::cout << "===================================" << std::endl;
-    std::cout << "|          Bienvenido a           |" << std::endl;
-    std::cout << "|        Simulador de Chat        |" << std::endl;
+    std::cout << "|          Welcome to             |" << std::endl;
+    std::cout << "|        Chat Simulation          |" << std::endl;
     std::cout << "|                                 |" << std::endl;
-    std::cout << "|  1. Login                       |" << std::endl;
-    std::cout << "|  2. Logout                      |" << std::endl;
-    std::cout << "|  3. Broadcast                   |" << std::endl;
-    std::cout << "|  4. Unicast                     |" << std::endl;
+    std::cout << "|  1. Logout                      |" << std::endl;
+    std::cout << "|  2. Broadcast                   |" << std::endl;
+    std::cout << "|  3. Unicast                     |" << std::endl;
     /*std::cout << "|  f. Rotar inverso (0.1)         |" << std::endl;
     std::cout << "|  g. Escalar (1.1)               |" << std::endl;
     std::cout << "|  h. Escalar inverso (0.9)       |" << std::endl;
@@ -27,10 +27,27 @@ void print_menu() {
     std::cout << "===================================" << std::endl;
 }
 
+char Cast_Option(int option){
+	switch(option){
+		case 1:{
+			return 'O';
+		}
+		case 2:{
+			return 'B';
+		}
+		case 3:{
+			return 'b';
+		}
+		default:{
+			return 'z';
+		}
+	}
+}
+
 void read_thread(int n,int SocketFD){
     char buffer;
     for (;;) {
-        n = read(SocketFD, buffer, 1);
+        n = read(SocketFD, &buffer, 1);
         rcv.Receive_Protocol(buffer, n, SocketFD);
     }
      
@@ -55,12 +72,9 @@ int main(void){
     for(;;){
         print_menu();
         std::cout << "SELECT AN ACTION :D " << std::endl;
-        std::string action;
-        std::getline(std::cin,action);
-        if(msg == "exit"){
-            break;
-        }
-        snd.Send_Protocol(action[0], n, SocketFD);
+        int action;
+        std::cin >> action;
+        snd.Send_Protocol(Cast_Option(action), n, SocketFD);
     }
    
     shutdown(SocketFD, SHUT_RDWR);

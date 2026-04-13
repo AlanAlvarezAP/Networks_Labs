@@ -35,22 +35,37 @@ std::string number_to_string(int number,int size) {
 
 }
 
+void print_map(std::unordered_map<std::string,int>* little_map=nullptr){
+	if(!little_map){
+		std::cout << "NO MAP" << std::endl;
+		return;
+	}
+	std::cout << "------------------------------------------MAP STATE -----------------------------" << std::endl;
+	for(auto &p:*little_map){
+		std::cout << " We have person " << p.first << " with socket " << p.second << std::endl;
+	}
+	std::cout << "---------------------------------------------------------------------------------" << std::endl;
+
+}
 
 class Protocols_Receivers {
 public:
 	
 	std::string Login(int n, int SocketFD) {
-		int size_name;
+		char buffer_simb[256];
 		char buffer[256];
 
 		bzero(buffer, 256);
+		bzero(buffer_simb,256);
+
+		n = read(SocketFD,buffer_simb,1);
 		n = read(SocketFD, buffer, 4);
 		buffer[n] = '\0';
 
 		int size_name = std::atoi(buffer);
 
 		n = read(SocketFD, buffer, size_name);
-
+		std::cout << "The buffer is " << buffer << std::endl;
 		return buffer;
 
 	}
@@ -79,16 +94,12 @@ public:
 					std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
 					write(SocketFD, final_msg.data(), final_msg.size());
 				}else {
-					little_map[nickname] = SocketFD;
+					(*little_map)[nickname] = SocketFD;
 					char k = 'K';
 					write(SocketFD, &k, 1);
 				}
 
-				std::cout << "---------MAPA ACTU-------------" << std::endl;
-				for (auto &p : *little_map) {
-					std::cout << "Se tiene persona " << p.first << " con socket " << p.second << std::endl;
-				}
-				std::cout << "-------------------------------" << std::endl;
+				print_map(little_map);
 
 				break;
 			}
@@ -112,6 +123,7 @@ public:
 						little_map->erase(it);
 						char k = 'K';
 						write(SocketFD, &k, 1);
+						print_map(little_map);
 						return;
 					}
 				}
@@ -122,7 +134,7 @@ public:
 				break;
 			}
 			default: {
-				std::cout << "This protocolo is not registered :( " << std::endl;
+				std::cout << "This protocol is not registered :( " << std::endl;
 				break;
 			}
 
@@ -143,6 +155,7 @@ public:
 		std::getline(std::cin, name);
 		int size_msg = name.size();
 		std::string final_msg = "L" +number_to_string(size_msg,4) + name;
+		std::cout << "Sending... " << final_msg << std::endl;
 		write(SocketFD, final_msg.data(), final_msg.size());
 
 	}

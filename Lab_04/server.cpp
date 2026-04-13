@@ -8,7 +8,7 @@ Protocols_Senders snd;
 void read_thread(int n,int SocketFD){
     char buffer;
     for(;;){
-        n = read(SocketFD, buffer, 1);
+        n = read(SocketFD, &buffer, 1);
         rcv.Receive_Protocol(buffer, n, SocketFD);
     }
     
