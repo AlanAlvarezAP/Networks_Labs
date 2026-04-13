@@ -49,13 +49,10 @@ public:
 	std::unordered_map<std::string, int> little_map;
 
 	std::string Login(int n, int SocketFD) {
-		char buffer_simb[256];
 		char buffer[256];
 
 		bzero(buffer, 256);
-		bzero(buffer_simb, 256);
 
-		n = read(SocketFD, buffer_simb, 1);
 		n = read(SocketFD, buffer, 4);
 		buffer[n] = '\0';
 
@@ -67,6 +64,7 @@ public:
 	}
 
 	void Cases_Server(char type, int n, int SocketFD) {
+		std::cout << " SE ENTRO EL TIPO " << type << std::endl;
 		switch (type) {
 			case 'L': {
 				std::string nickname = Login(n, SocketFD);
@@ -88,8 +86,11 @@ public:
 			}
 			
 			case 'O': {
+				std::cout << "Se entro en la opcion de logout" << std::endl;
 				for (auto it = little_map.begin(); it != little_map.end(); ++it) {
+					std::cout << " A BUSCAR " << SocketFD << " VALOR FOR -> " << it->second << std::endl;
 					if (it->second == SocketFD) {
+						std::cout << "SE ENCONTRO" << std::endl;
 						little_map.erase(it);
 						char k = 'K';
 						write(SocketFD, &k, 1);
@@ -118,7 +119,7 @@ public:
 
 class Client_Protocols {
 public:
-	bool logging_status = false;
+	bool logging_status = false,running=false;
 	void Error(int n, int SocketFD) {
 		char buffer[256];
 

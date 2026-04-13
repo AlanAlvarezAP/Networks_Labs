@@ -27,6 +27,7 @@ void print_menu() {
 }
 
 char Cast_Option(int option){
+	std::cout << " SE ENTRO AL CAST CON " << option << std::endl;
 	switch(option){
         	case 1: {
             		return 'L';
@@ -48,11 +49,13 @@ char Cast_Option(int option){
 
 void read_thread(int n,int SocketFD){
     char buffer;
-    for (;;) {
+    while (clp.running) {
         n = read(SocketFD, &buffer, 1);
         if (n <= 0) {
             std::cout << "Disconection from server closing..." << std::endl;
             close(SocketFD);
+	    clp.running=false;
+	    clp.logging_status=false;
             break;
         }
         clp.Cases_Client(buffer, n, SocketFD);
@@ -74,8 +77,8 @@ int main(void){
  
     	connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
-	clp.logged_in=false; 
-
+	clp.logging_status=false; 
+	clp.running=true;
     	print_menu();
 
     	std::thread(read_thread,n,SocketFD).detach();
@@ -85,14 +88,15 @@ int main(void){
         	std::cin >> action;
 		std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         	char option = Cast_Option(action);
-
+		std::cout << "ACTION ES " << action << " Y CASTEADO " << option << std::endl;
         	if (option != 'L' && clp.logging_status == false) {
             		std::cout << "You are not logged in, try logging pls :D" << std::endl;
             		print_menu();
             		continue;
         	}
+		std::cout << "Mandando el socket " << SocketFD << std::endl;
         	clp.Cases_Client(option, n, SocketFD);
-		if(!clp.logged_in){
+		if(!clp.logging_status || !clp.running){
 			break;
 		}
     	}
