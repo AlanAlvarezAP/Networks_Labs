@@ -61,38 +61,42 @@ void read_thread(int n,int SocketFD){
 }
 
 int main(void){
-    struct sockaddr_in stSockAddr;
-    int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    int n;
+    while(true){
+	struct sockaddr_in stSockAddr;
+    	int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    	int n;
 
-    memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
+    	memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
+
+    	stSockAddr.sin_family = AF_INET;
+    	stSockAddr.sin_port = htons(45000);
+    	inet_pton(AF_INET, "127.0.0.1", &stSockAddr.sin_addr);
  
-    stSockAddr.sin_family = AF_INET;
-    stSockAddr.sin_port = htons(45000);
-    inet_pton(AF_INET, "127.0.0.1", &stSockAddr.sin_addr);
- 
-    connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
+    	connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
-    print_menu();
+	clp.logged_in=false; 
 
-    std::thread(read_thread,n,SocketFD).detach();
-    for(;;) {
-        std::cout << "SELECT AN ACTION :D " << std::endl;
-        int action;
-        std::cin >> action;
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
-        char option = Cast_Option(action);
+    	print_menu();
 
-        if (option != 'L' && clp.logging_status == false) {
-            std::cout << "You are not logged in, try logging pls :D" << std::endl;
-            print_menu();
-            continue;
-        }
+    	std::thread(read_thread,n,SocketFD).detach();
+    	for(;;) {
+        	std::cout << "SELECT AN ACTION :D " << std::endl;
+        	int action;
+        	std::cin >> action;
+		std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+        	char option = Cast_Option(action);
 
-        clp.Cases_Client(option, n, SocketFD);
+        	if (option != 'L' && clp.logging_status == false) {
+            		std::cout << "You are not logged in, try logging pls :D" << std::endl;
+            		print_menu();
+            		continue;
+        	}
+        	clp.Cases_Client(option, n, SocketFD);
+		if(!clp.logged_in){
+			break;
+		}
+    	}
     }
-   
-    shutdown(SocketFD, SHUT_RDWR);
-    close(SocketFD);
+    
     return 0;
 }
