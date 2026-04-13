@@ -11,6 +11,7 @@
 #include <string>
 #include <thread>
 #include <unordered_map>
+#include <limits>
 
 std::string number_to_string(int number,int size) {
 	std::string result(size, ' ');
@@ -157,12 +158,12 @@ public:
 			}
 			case 'K': {
 				std::cout << "All good OK " << std::endl;
-				loging_status = true;
+				logging_status = true;
 				break;
 			}
 			case 'E': {
 				Error(n, SocketFD);
-				loging_status = false;
+				logging_status = false;
 				break;
 			}
 

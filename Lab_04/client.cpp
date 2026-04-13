@@ -28,9 +28,9 @@ void print_menu() {
 
 char Cast_Option(int option){
 	switch(option){
-        case 1: {
-            return 'L';
-        }
+        	case 1: {
+            		return 'L';
+        	}
 		case 2:{
 			return 'O';
 		}
@@ -51,7 +51,7 @@ void read_thread(int n,int SocketFD){
     for (;;) {
         n = read(SocketFD, &buffer, 1);
         if (n <= 0) {
-            std::cout << "Ilegal disconection from server closing..." << std::endl;
+            std::cout << "Disconection from server closing..." << std::endl;
             close(SocketFD);
             break;
         }
@@ -76,13 +76,14 @@ int main(void){
     print_menu();
 
     std::thread(read_thread,n,SocketFD).detach();
-    for(;;){
+    for(;;) {
         std::cout << "SELECT AN ACTION :D " << std::endl;
         int action;
         std::cin >> action;
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         char option = Cast_Option(action);
 
-        if (option != 'L' && clp.logging_status = false) {
+        if (option != 'L' && clp.logging_status == false) {
             std::cout << "You are not logged in, try logging pls :D" << std::endl;
             print_menu();
             continue;

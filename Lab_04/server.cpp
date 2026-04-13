@@ -8,7 +8,7 @@ void read_thread(int n,int SocketFD){
     for(;;){
         n = read(SocketFD, &buffer, 1);
         if (n <= 0) {
-            std::cout << "Ilegal disconection from client closing..." << std::endl;
+            std::cout << "Disconection from client closing..." << std::endl;
             sv.Cases_Server('O', n, SocketFD);
             break;
         }
