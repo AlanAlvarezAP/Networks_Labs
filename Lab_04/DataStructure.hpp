@@ -59,6 +59,7 @@ public:
 		int size_name = std::atoi(buffer);
 
 		n = read(SocketFD, buffer, size_name);
+		std::cout << "LOGIN - SocketFD: " << SocketFD << " nombre: " << buffer << std::endl;
 		return buffer;
 
 	}
@@ -86,7 +87,7 @@ public:
 			}
 			
 			case 'O': {
-				std::cout << "Se entro en la opcion de logout" << std::endl;
+				std::cout << "LOGOUT - SocketFD recibido: " << SocketFD << std::endl;
 				for (auto it = little_map.begin(); it != little_map.end(); ++it) {
 					std::cout << " A BUSCAR " << SocketFD << " VALOR FOR -> " << it->second << std::endl;
 					if (it->second == SocketFD) {
