@@ -1,9 +1,7 @@
 /* Server code in C */
 #include "DataStructure.hpp"
 
-std::unordered_map<std::string,int> little_map;
-Protocols_Receivers rcv;
-Protocols_Senders snd;
+Server_Protocols sv;
 
 void read_thread(int n,int SocketFD){
     char buffer;
@@ -33,7 +31,7 @@ int main(void){
     int ClientFD=0;
     for(;;){
       ClientFD=accept(ServerFD,NULL,NULL);
-      rcv.Receive_Protocol('L', n, ClientFD,&little_map);
+      sv.Cases_Server('L', n, ClientFD,&little_map);
 
       std::thread (read_thread,n,ClientFD).detach();
     }

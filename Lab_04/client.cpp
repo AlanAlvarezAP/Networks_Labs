@@ -1,9 +1,7 @@
-/* Client code in C */
- 
+/* Client code in C */ 
 #include "DataStructure.hpp"
-Protocols_Receivers rcv;
-Protocols_Senders snd;
- 
+
+Client_Protocols clp;
 
 void print_menu() {
     std::cout << "===================================" << std::endl;
@@ -74,7 +72,7 @@ int main(void){
         std::cout << "SELECT AN ACTION :D " << std::endl;
         int action;
         std::cin >> action;
-        snd.Send_Protocol(Cast_Option(action), n, SocketFD);
+        clp.Cases_Client(Cast_Option(action), n, SocketFD);
     }
    
     shutdown(SocketFD, SHUT_RDWR);

@@ -48,52 +48,39 @@ void print_map(std::unordered_map<std::string,int>* little_map=nullptr){
 
 }
 
-class Protocols_Receivers {
+class Server_Protocols {
 public:
-	
+	std::unordered_map<std::string, int> little_map;
+
 	std::string Login(int n, int SocketFD) {
 		char buffer_simb[256];
 		char buffer[256];
 
 		bzero(buffer, 256);
-		bzero(buffer_simb,256);
+		bzero(buffer_simb, 256);
 
-		n = read(SocketFD,buffer_simb,1);
+		n = read(SocketFD, buffer_simb, 1);
 		n = read(SocketFD, buffer, 4);
 		buffer[n] = '\0';
 
 		int size_name = std::atoi(buffer);
 
 		n = read(SocketFD, buffer, size_name);
-		std::cout << "The buffer is " << buffer << std::endl;
 		return buffer;
 
 	}
 
-	void Error(int n, int SocketFD) {
-		char buffer[256];
-
-		n = read(SocketFD, buffer, 5);
-		buffer[n] = '\0';
-
-		int size_msg = std::atoi(buffer);
-		n = read(SocketFD, buffer, size_msg);
-		buffer[n] = '\0';
-
-		std::cout << "ERROR -> " << buffer << std::endl;
-
-	}
-
-	void Receive_Protocol(char type, int n, int SocketFD, std::unordered_map<std::string,int>*little_map = nullptr) {
+	void Cases_Server(char type, int n, int SocketFD) {
 		switch (type) {
 			case 'L': {
-				std::string nickname=Login(n, SocketFD);
+				std::string nickname = Login(n, SocketFD);
 				if (little_map && little_map->find(nickname) != little_map->end()) {
 					std::string error_msg = "ERROR nickname already in server";
 					int size_error = error_msg.size();
 					std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
 					write(SocketFD, final_msg.data(), final_msg.size());
-				}else {
+				}
+				else {
 					(*little_map)[nickname] = SocketFD;
 					char k = 'K';
 					write(SocketFD, &k, 1);
@@ -103,14 +90,7 @@ public:
 
 				break;
 			}
-			case 'K': {
-				std::cout << "All good OK " << std::endl;
-				break;
-			}
-			case 'E': {
-				Error(n, SocketFD);
-				break;
-			}
+			
 			case 'O': {
 				if (!little_map) {
 					std::string error_msg = "ERROR loginout";
@@ -144,24 +124,36 @@ public:
 
 };
 
+class Client_Protocols {
 
-class Protocols_Senders {
-public:
-	
+	void Error(int n, int SocketFD) {
+		char buffer[256];
+
+		n = read(SocketFD, buffer, 5);
+		buffer[n] = '\0';
+
+		int size_msg = std::atoi(buffer);
+		n = read(SocketFD, buffer, size_msg);
+		buffer[n] = '\0';
+
+		std::cout << "ERROR -> " << buffer << std::endl;
+
+	}
+
 	void Login(int n, int SocketFD) {
 		std::string name;
 
 		std::cout << "Give me your nickname to send -> ";
 		std::getline(std::cin, name);
 		int size_msg = name.size();
-		std::string final_msg = "L" +number_to_string(size_msg,4) + name;
+		std::string final_msg = "L" + number_to_string(size_msg, 4) + name;
 		std::cout << "Sending... " << final_msg << std::endl;
 		write(SocketFD, final_msg.data(), final_msg.size());
 
 	}
 
-	void Send_Protocol(char type, int n, int SocketFD) {
-		switch(type) {
+	void Cases_Client(char type, int n, int SocketFD) {
+		switch (type) {
 			case 'L': {
 				Login(n, SocketFD);
 				break;
@@ -171,12 +163,21 @@ public:
 				write(SocketFD, &O, 1);
 				break;
 			}
+			case 'K': {
+				std::cout << "All good OK " << std::endl;
+				break;
+			}
+			case 'E': {
+				Error(n, SocketFD);
+				break;
+			}
+
 			default: {
-				std::cout << "This protocolo is not registered :( " << std::endl;
+				std::cout << "This protocol is not registered :( " << std::endl;
 				break;
 			}
 		}
-	
+
 	}
 
 };
