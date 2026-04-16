@@ -13,6 +13,10 @@
 #include <unordered_map>
 #include <limits>
 
+#include "json.hpp"
+
+typedef nlohmann::json json;
+
 std::string number_to_string(int number,int size) {
 	std::string result(size, ' ');
 	int count = size-1;
@@ -148,6 +152,21 @@ public:
 		write(SocketDST, final_msg.data(), final_msg.size());
 	}
 
+	void Send_List(int n,int SocketFD){
+		json js;
+		js["clients"]=json::array();
+		
+		for(auto p:little_map){
+			js["clients"].push_back(p.first);
+		}
+
+		std::string to_send=js.dump();
+		std::string final_msg="t"+number_to_string((int)to_send.size(),5)+to_send;
+		write(SocketFD,final_msg.data(),final_msg.size());
+
+	}
+
+
 	void Cases_Server(char type, int n, int SocketFD) {
 		switch (type) {
 			case 'L':{
@@ -193,8 +212,12 @@ public:
 				Unicast(n, SocketFD);
 				break;
 			}
+			case 'T':{
+				Send_List(n,SocketFD);
+				break;
+			}
 			default: {
-				std::cout << "This protocol is not registered :( " << std::endl;
+				std::cout << "This protocol is not registered in Server :( " << std::endl;
 				break;
 			}
 
@@ -313,6 +336,23 @@ public:
 
 	}
 
+	void JSON_react(int n,int SocketFD){
+		char buffer[99999];
+		int size_json;
+		bzero(buffer,99999);
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_json=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_json);
+		buffer[n]='\0';
+
+		json js=json::parse(buffer);
+
+		std::cout << js.dump(4) << std::endl;
+	}
+
 	void Cases_Client(char type, int n, int SocketFD) {
 		switch (type) {
 			case 'L': {
@@ -322,6 +362,7 @@ public:
 			case 'O': {
 				char O = 'O';
 				write(SocketFD, &O, 1);
+				close(SocketFD);
 				break;
 			}
 			case 'K': {
@@ -358,8 +399,17 @@ public:
 				Unicast_react(n, SocketFD);
 				break;
 			}
+			case 'T':{
+				char T='T';
+				write(SocketFD,&T,1);
+				break;
+			}
+			case 't':{
+				JSON_react(n,SocketFD);
+				break;
+			}
 			default: {
-				std::cout << "This protocol is not registered :( " << std::endl;
+				std::cout << "This protocol is not registered in Client :( " << std::endl;
 				break;
 			}
 		}

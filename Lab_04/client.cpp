@@ -12,8 +12,8 @@ void print_menu() {
     std::cout << "|  2. Logout                      |" << std::endl;
     std::cout << "|  3. Broadcast                   |" << std::endl;
     std::cout << "|  4. Unicast                     |" << std::endl;
-    /*std::cout << "|  f. Rotar inverso (0.1)         |" << std::endl;
-    std::cout << "|  g. Escalar (1.1)               |" << std::endl;
+    std::cout << "|  5. Receive all clients         |" << std::endl;
+    /*std::cout << "|  g. Escalar (1.1)               |" << std::endl;
     std::cout << "|  h. Escalar inverso (0.9)       |" << std::endl;
     std::cout << "|  x. Llenar pedidos Scale In-Out |" << std::endl;
     std::cout << "|  z. Animacion extra (all animation sin escala) con rebanada|" << std::endl;
@@ -40,6 +40,9 @@ char Cast_Option(int option){
 		case 4:{
 			return 'U';
 		}
+        case 5:{
+            return 'T';
+        }
 		default:{
 			return 'z';
 		}
