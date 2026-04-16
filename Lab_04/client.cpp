@@ -29,7 +29,7 @@ void print_menu() {
 char Cast_Option(int option){
 	switch(option){
         case 1: {
-            	return 'L';
+            return 'L';
         }
 		case 2:{
 			return 'O';
@@ -50,12 +50,18 @@ void read_thread(int n,int SocketFD){
     char buffer;
     while (clp.running) {
         n = read(SocketFD, &buffer, 1);
-        if (n <= 0) {
-            std::cout << "Disconection from server closing..." << std::endl;
+        if(n == 0){
+            std::cout << "Server closed connection because of logout :D " << std::endl;
             close(SocketFD);
 	        clp.running=false;
 	        clp.logging_status=false;
-            exit(0);
+            break;
+        }
+        else if (n < 0) {
+            std::cout << "Disconection from server because of an ERROR..." << std::endl;
+            close(SocketFD);
+	        clp.running=false;
+	        clp.logging_status=false;
             break;
         }
         clp.Cases_Client(buffer, n, SocketFD);
@@ -76,13 +82,11 @@ int main(void){
  
     connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
 
-    std::cout << "CREANDO NUEVO CLIENTE CON SOCKET " << SocketFD << std::endl;
-
     clp.running = true;
     print_menu();
 
     std::thread(read_thread,n,SocketFD).detach();
-    for(;;) {
+    while(clp.running) {
         std::cout << "SELECT AN ACTION :D " << std::endl;
         int action;
         std::cin >> action;
@@ -95,10 +99,7 @@ int main(void){
         }
         clp.Cases_Client(option, n, SocketFD);
 
-        if (!clp.running) {
-            exit(0);
-        }
     }
-    
+    std::cout << " LEAVING ... " << std::endl;
     return 0;
 }

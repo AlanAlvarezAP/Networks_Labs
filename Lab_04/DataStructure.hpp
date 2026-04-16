@@ -48,17 +48,6 @@ class Server_Protocols {
 public:
 	std::unordered_map<std::string, int> little_map;
 
-	void Remove_Client(int SocketFD) {
-		for (auto it = little_map.begin(); it != little_map.end(); ++it) {
-			if (it->second == SocketFD) {
-				little_map.erase(it);
-				close(SocketFD);
-				print_map(little_map);
-				return;
-			}
-		}
-	}
-
 	std::string Login(int n, int SocketFD) {
 		char buffer[256];
 
@@ -186,8 +175,6 @@ public:
 						little_map.erase(it);
 						char k = 'K';
 						write(SocketFD, &k, 1);
-						shutdown(SocketFD, SHUT_RDWR);
-						close(SocketFD);
 						print_map(little_map);
 						return;
 					}
@@ -340,9 +327,12 @@ public:
 			case 'K': {
 				std::cout << "All good OK " << std::endl;
 				if (logging_status == true) {
+					std::cout << " I entered case logging out " << logging_status << " and running " << running << std::endl;
+					logging_status=false;
 					running = false;
 				}
 				else {
+					std::cout << " I entered the other case where i am logging in" << std::endl;
 					logging_status = true;
 				}
 				break;

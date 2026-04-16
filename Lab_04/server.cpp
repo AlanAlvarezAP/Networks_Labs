@@ -8,8 +8,8 @@ void read_thread(int n,int SocketFD){
     for(;;){
         n = read(SocketFD, &buffer, 1);
         if (n <= 0) {
-            std::cout << "Disconection from client closing..." << std::endl;
-            sv.Remove_Client(SocketFD);
+            std::cout << "Disconection from client  removing from map and closing..." << std::endl;
+            sv.Cases_Server('O',n,SocketFD);
             break;
         }
         sv.Cases_Server(buffer, n, SocketFD);
