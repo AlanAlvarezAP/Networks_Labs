@@ -19,7 +19,7 @@ int main() {
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
 
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(5000);
+    addr.sin_port = htons(45000);
     addr.sin_addr.s_addr = INADDR_ANY;
 
     bind(server_fd, (struct sockaddr*)&addr, sizeof(addr));
@@ -37,9 +37,7 @@ int main() {
 
     while (total < sizeof(data)) {
 
-        n = read(client_fd,
-                 ((char*)&data) + total,
-                 sizeof(data) - total);
+        n = read(client_fd,((char*)&data) + total,sizeof(data) - total);
 
         if (n <= 0) {
             printf("Connection closed or error\n");
