@@ -12,6 +12,7 @@
 #include <thread>
 #include <unordered_map>
 #include <limits>
+#include <fstream>
 
 #include "json.hpp"
 
@@ -166,6 +167,62 @@ public:
 
 	}
 
+	void File_redirect(int n,int SocketFD){
+		std::string content,file_name,dest,orig;
+		int size_content,size_file_name,size_dest,size_orig;
+
+		char buffer[99999];
+		bzero(buffer,99999);
+		
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_content=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_content);
+		buffer[n]='\0';
+
+		content=buffer;
+
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_file_name=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_file_name);
+		buffer[n]='\0';
+
+		file_name=buffer;
+
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_dest=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_dest);
+		buffer[n]='\0';
+
+		dest=buffer;
+
+		if(little_map.find(dest) == little_map.end()){
+			std::string error_msg="ERROR destination for file not found :( ";
+			int size_error= error_msg.size();
+			std::string final_msg="E"+number_to_string(size_error,5)+error_msg;
+			write(SocketFD,final_msg.data(),final_msg.size());
+			return;
+		}
+
+		for(auto it=little_map.begin();it != little_map.end();it++){
+			if(it->second == SocketFD){
+				orig=it->first;
+				size_orig=orig.size();
+				break;
+			}
+		}
+
+		std::string final_msg="f"+number_to_string(size_content,5)+content+number_to_string(size_file_name,5)+file_name+number_to_string(size_orig,5)+orig;
+		write(little_map[dest],final_msg.data(),final_msg.size());
+	}
 
 	void Cases_Server(char type, int n, int SocketFD) {
 		switch (type) {
@@ -214,6 +271,10 @@ public:
 			}
 			case 'T':{
 				Send_List(n,SocketFD);
+				break;
+			}
+			case 'F':{
+				File_redirect(n,SocketFD);
 				break;
 			}
 			default: {
@@ -353,6 +414,77 @@ public:
 		std::cout << js.dump(4) << std::endl;
 	}
 
+	void Send_File(int n,int SocketFD,std::string file_name,std::string destination){
+
+		std::ifstream file(file_name+".txt",std::ios::binary);
+
+		char buffer[11];
+		bzero(buffer,11);
+
+		std::string msg;
+
+
+		while(file){
+			file.read(buffer,10);
+
+			int readed=file.gcount();
+
+			if(readed == 0){
+				break;
+			}
+			msg+=std::string(buffer,readed);
+
+		}
+		std::string final_msg="F"+number_to_string((int)msg.size(),5)+msg+number_to_string((int)file_name.size(),5)+file_name+number_to_string((int)destination.size(),5)+destination;
+		write(SocketFD,final_msg.data(),final_msg.size());
+	}
+	void File_read(int n,int SocketFD){
+		std::string file,file_name,origin;
+		int size_file,size_file_name,size_orig;
+
+		char buffer[99999];
+		bzero(buffer,99999);
+
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_file=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_file);
+		buffer[n]='\0';
+
+		file=buffer;
+
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_file_name=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_file_name);
+		buffer[n]='\0';
+
+		file_name=buffer;
+
+		n=read(SocketFD,buffer,5);
+		buffer[n]='\0';
+
+		size_orig=std::atoi(buffer);
+
+		n=read(SocketFD,buffer,size_orig);
+		buffer[n]='\0';
+
+		origin=buffer;
+
+		std::cout << " --------------THE FILE SENDED IS CALLED -> " << file_name << "-----------------" << std::endl;
+		std::cout << " --------------SENDED  BY: " << origin << "-------------------------------------" << std::endl;
+		std::cout << " --------------THE CONTENT IS: -----------------------------------------------" << std::endl;
+		std::cout << file << std::endl;
+
+		std::ofstream ofs("bible2.txt",std::ios::binary);
+		ofs.write(file.data(),file.size());
+
+	}
+
 	void Cases_Client(char type, int n, int SocketFD) {
 		switch (type) {
 			case 'L': {
@@ -368,12 +500,10 @@ public:
 			case 'K': {
 				std::cout << "All good OK " << std::endl;
 				if (logging_status == true) {
-					std::cout << " I entered case logging out " << logging_status << " and running " << running << std::endl;
 					logging_status=false;
 					running = false;
 				}
 				else {
-					std::cout << " I entered the other case where i am logging in" << std::endl;
 					logging_status = true;
 				}
 				break;
@@ -406,6 +536,19 @@ public:
 			}
 			case 't':{
 				JSON_react(n,SocketFD);
+				break;
+			}
+			case 'F':{
+				std::string dest,file_nam;
+				std::cout << "Give me the file name ";
+				std::getline(std::cin,file_nam);
+				std::cout << " Give me the destination ";
+				std::getline(std::cin,dest);
+				Send_File(n,SocketFD,file_nam,dest);
+				break;
+			}
+			case 'f':{
+				File_read(n,SocketFD);
 				break;
 			}
 			default: {
