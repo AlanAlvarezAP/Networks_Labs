@@ -43,11 +43,28 @@ void check_win(struct TickTackToe &dat){
 
 void check_draw(struct TickTackToe &dat){
     for(int i=0;i<9;i++){
-        if(dat.cell_moves[i] != '-'){
+        if(dat.cell_moves[i] == '-'){
             return;
         }
     }
     dat.winner_draw='d';
+}
+
+void print_table(struct TickTackToe &dat){
+    for(int i=0;i<9;i+=3){
+        printf("%c ",dat.cell_moves[i]);
+        printf("%c ",dat.cell_moves[i+1]);
+        printf("%c\n",dat.cell_moves[i+2]);
+    }
+}
+
+void print_info(struct TickTackToe &dat){
+    printf("Received struct:\n");
+    printf("The table status is:\n");
+    print_table(dat);
+    printf("\n");
+    printf("the turn is = %c\n", dat.curr_move);
+    printf("the status of the match is = %c\n", dat.winner_draw);
 }
 
 int main() {
@@ -86,16 +103,23 @@ int main() {
 
             total += n;
         }
-        printf("Received struct:\n");
-        printf("The table status is:\n");
-        for(int i=0;i<9;i+=3){
-            printf("%c ",data.cell_moves[i]);
-            printf("%c ",data.cell_moves[i+1]);
-            printf("%c\n",data.cell_moves[i+2]);
+        print_info(data);
+
+        if(data.winner_draw == 'w'){
+            printf("---------------------------- RESULT-----------------------\n");
+            printf("The winner is the client :D\n");
+            printf("---------------------------- CLIENT WINS -----------------------\n");
+            print_table(data);
+            write(client_fd, (char*)&data, sizeof(data));
+            break;
+        }else if(data.winner_draw == 'd'){
+            printf("---------------------------- RESULT-----------------------\n");
+            printf("DRAW -_-\n");
+            printf("---------------------------- DRAW -----------------------\n");
+            print_table(data);
+            write(client_fd, (char*)&data, sizeof(data));
+            break;
         }
-        printf("\n");
-        printf("the turn is = %c\n", data.curr_move);
-        printf("the status of the match is = %c\n", data.winner_draw);
 
         int cell;
         do{
@@ -110,6 +134,20 @@ int main() {
 
         write(client_fd, (char*)&data, sizeof(data));
         printf("Struct sent\n");
+
+        if(data.winner_draw == 'w'){
+            printf("---------------------------- RESULT-----------------------\n");
+            printf("The winner is the server :D\n");
+            printf("---------------------------- SERVER WINS -----------------------\n");
+            print_table(data);
+            write(client_fd, (char*)&data, sizeof(data));
+        }else if(data.winner_draw == 'd'){
+            printf("---------------------------- RESULT-----------------------\n");
+            printf("DRAW -_-\n");
+            printf("---------------------------- DRAW -----------------------\n");
+            print_table(data);
+            write(client_fd, (char*)&data, sizeof(data));
+        }
 
     }while(data.winner_draw != 'w' && data.winner_draw != 'd');
 
