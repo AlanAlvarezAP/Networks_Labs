@@ -7,9 +7,16 @@ void read_thread(int n,int SocketFD){
     char buffer;
     for(;;){
         n = read(SocketFD, &buffer, 1);
-        if (n <= 0) {
-            std::cout << "Disconection from client  removing from map and closing..." << std::endl;
-            sv.Cases_Server('O',n,SocketFD);
+        if (n == 0) {
+            std::cout << "Client disconnected correctly" << std::endl;
+            sv.Cases_Server('O', n, SocketFD);
+            close(SocketFD);
+            break;
+        }
+        if (n < 0) {
+            std::cout << "Error reading from client" << std::endl;
+            sv.Cases_Server('O', n, SocketFD);
+            close(SocketFD);
             break;
         }
         sv.Cases_Server(buffer, n, SocketFD);

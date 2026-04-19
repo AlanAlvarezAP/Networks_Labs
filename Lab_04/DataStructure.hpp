@@ -480,8 +480,18 @@ public:
 		std::cout << " --------------THE CONTENT IS: -----------------------------------------------" << std::endl;
 		std::cout << file << std::endl;
 
-		std::ofstream ofs("bible2.txt",std::ios::binary);
-		ofs.write(file.data(),file.size());
+		std::ofstream ofs("bible2.txt", std::ios::binary);
+
+		size_t total = file.size();
+		size_t pos = 0;
+
+		while (pos < total) {
+			size_t chunk_size = std::min((size_t)10, total - pos);
+
+			ofs.write(file.data() + pos, chunk_size);
+
+			pos += chunk_size;
+		}
 
 	}
 
