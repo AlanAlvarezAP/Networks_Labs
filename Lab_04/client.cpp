@@ -95,7 +95,6 @@ int main(void){
                 continue;
         }
         clp.Cases_Client(option, n, SocketFD);
-
     }
     std::cout << " LEAVING ... " << std::endl;
     return 0;

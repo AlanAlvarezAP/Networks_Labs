@@ -493,6 +493,8 @@ public:
 			}
 			case 'O': {
 				char O = 'O';
+				logging_status=false;
+				running=false;
 				write(SocketFD, &O, 1);
 				close(SocketFD);
 				break;
