@@ -84,7 +84,7 @@ int main() {
         do{
             printf("Give me the cell to play (1-9) ");
             scanf("%d",&cell);
-        }while((cell <= 0 && cell >= 10) || data.cell_moves[cell-1] != '-');
+        }while((cell < 1 || cell > 9) || data.cell_moves[cell-1] != '-');
 
         data.cell_moves[cell-1]=data.curr_move;
         check_win(data);
@@ -132,14 +132,12 @@ int main() {
             printf("The winner is the server :D\n");
             printf("---------------------------- SERVER WINS -----------------------\n");
             print_table(data);
-            write(sock, (char*)&data, sizeof(data));
             break;
         }else if(data.winner_draw == 'd'){
             printf("---------------------------- RESULT-----------------------\n");
             printf("DRAW -_-\n");
             printf("---------------------------- DRAW -----------------------\n");
             print_table(data);
-            write(sock, (char*)&data, sizeof(data));
             break;
         }
     }
