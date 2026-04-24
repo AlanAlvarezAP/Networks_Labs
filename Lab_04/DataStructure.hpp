@@ -168,60 +168,94 @@ public:
 	}
 
 	void File_redirect(int n,int SocketFD){
-		std::string content,file_name,dest,orig;
-		int size_content,size_file_name,size_dest,size_orig;
+		std::string content, file_name, dest, orig;
+		int size_content, size_file_name, size_dest, size_orig;
 
-		char buffer[99999];
-		bzero(buffer,99999);
-		
-		n=read(SocketFD,buffer,5);
-		buffer[n]='\0';
+		const int MAX_SIZE = 99999;
 
-		size_content=std::atoi(buffer);
+		char size_buf[6];
 
-		n=read(SocketFD,buffer,size_content);
-		buffer[n]='\0';
+		if(read(SocketFD, size_buf, 5) <= 0) return;
+		size_buf[5] = '\0';
 
-		content=buffer;
+		size_content = std::atoi(size_buf);
+		if(size_content > MAX_SIZE) return;
 
-		n=read(SocketFD,buffer,5);
-		buffer[n]='\0';
+		char buffer[10];
+		int total = 0;
+		content.clear();
+		content.reserve(size_content);
 
-		size_file_name=std::atoi(buffer);
+		while(total < size_content){
+			int to_read = std::min(10, size_content - total);
+			int n = read(SocketFD, buffer, to_read);
 
-		n=read(SocketFD,buffer,size_file_name);
-		buffer[n]='\0';
+			if(n <= 0) return;
 
-		file_name=buffer;
+			content.append(buffer, n);
+			total += n;
+		}
 
-		n=read(SocketFD,buffer,5);
-		buffer[n]='\0';
+		if(read(SocketFD, size_buf, 5) <= 0) return;
+		size_buf[5] = '\0';
 
-		size_dest=std::atoi(buffer);
+		size_file_name = std::atoi(size_buf);
 
-		n=read(SocketFD,buffer,size_dest);
-		buffer[n]='\0';
+		total = 0;
+		file_name.clear();
 
-		dest=buffer;
+		while(total < size_file_name){
+			int to_read = std::min(10, size_file_name - total);
+			int n = read(SocketFD, buffer, to_read);
+
+			if(n <= 0) return;
+
+			file_name.append(buffer, n);
+			total += n;
+		}
+
+		if(read(SocketFD, size_buf, 5) <= 0) return;
+		size_buf[5] = '\0';
+
+		size_dest = std::atoi(size_buf);
+
+		total = 0;
+		dest.clear();
+
+		while(total < size_dest){
+			int to_read = std::min(10, size_dest - total);
+			int n = read(SocketFD, buffer, to_read);
+
+			if(n <= 0) return;
+
+			dest.append(buffer, n);
+			total += n;
+		}
 
 		if(little_map.find(dest) == little_map.end()){
-			std::string error_msg="ERROR destination for file not found :( ";
-			int size_error= error_msg.size();
-			std::string final_msg="E"+number_to_string(size_error,5)+error_msg;
-			write(SocketFD,final_msg.data(),final_msg.size());
+			std::string error_msg = "ERROR destination for file not found :( ";
+			std::string final_msg = "E" + number_to_string(error_msg.size(), 5) + error_msg;
+			write(SocketFD, final_msg.data(), final_msg.size());
 			return;
 		}
 
-		for(auto it=little_map.begin();it != little_map.end();it++){
+		for(auto it = little_map.begin(); it != little_map.end(); ++it){
 			if(it->second == SocketFD){
-				orig=it->first;
-				size_orig=orig.size();
+				orig = it->first;
 				break;
 			}
 		}
 
-		std::string final_msg="f"+number_to_string(size_content,5)+content+number_to_string(size_file_name,5)+file_name+number_to_string(size_orig,5)+orig;
-		write(little_map[dest],final_msg.data(),final_msg.size());
+		std::string final_msg =
+			"f"
+			+ number_to_string(size_content, 5)
+			+ content
+			+ number_to_string(size_file_name, 5)
+			+ file_name
+			+ number_to_string(orig.size(), 5)
+			+ orig;
+
+		write(little_map[dest], final_msg.data(), final_msg.size());
 	}
 
 	void Cases_Server(char type, int n, int SocketFD) {
@@ -414,85 +448,115 @@ public:
 		std::cout << js.dump(4) << std::endl;
 	}
 
-	void Send_File(int n,int SocketFD,std::string file_name,std::string destination){
+	void Send_File(int n, int SocketFD, std::string file_name, std::string destination){
 
-		std::ifstream file(file_name+".txt",std::ios::binary);
+		const int MAX_SIZE = 99999;
 
-		char buffer[11];
-		bzero(buffer,11);
+		std::ifstream file(file_name, std::ios::binary);
+		if(!file.is_open()) return;
 
 		std::string msg;
+		msg.reserve(MAX_SIZE);
 
+		char buffer[10];
 
-		while(file){
-			file.read(buffer,10);
+		while(file && msg.size() < MAX_SIZE){
 
-			int readed=file.gcount();
+			file.read(buffer, std::min(10, MAX_SIZE - (int)msg.size()));
+			int readed = file.gcount();
 
-			if(readed == 0){
-				break;
-			}
-			msg+=std::string(buffer,readed);
+			if(readed <= 0) break;
 
+			msg.append(buffer, readed);
 		}
-		std::string final_msg="F"+number_to_string((int)msg.size(),5)+msg+number_to_string((int)file_name.size(),5)+file_name+number_to_string((int)destination.size(),5)+destination;
-		write(SocketFD,final_msg.data(),final_msg.size());
+
+		if(file_name.size() > MAX_SIZE)
+			file_name.resize(MAX_SIZE);
+
+		if(destination.size() > MAX_SIZE)
+			destination.resize(MAX_SIZE);
+
+		std::string final_msg =
+			"F"
+			+ number_to_string(msg.size(), 5)
+			+ msg
+			+ number_to_string(file_name.size(), 5)
+			+ file_name
+			+ number_to_string(destination.size(), 5)
+			+ destination;
+
+		write(SocketFD, final_msg.data(), final_msg.size());
 	}
 	void File_read(int n,int SocketFD){
-		std::string file,file_name,origin;
-		int size_file,size_file_name,size_orig;
+		std::string file_name, origin;
+		int size_file, size_file_name, size_orig;
 
-		char buffer[99999];
-		bzero(buffer,99999);
+		const int MAX_SIZE = 99999;
 
-		n=read(SocketFD,buffer,5);
-		buffer[n]='\0';
+		char size_buf[6];
 
-		size_file=std::atoi(buffer);
+		if(read(SocketFD, size_buf, 5) <= 0) return;
+		size_buf[5] = '\0';
 
-		n=read(SocketFD,buffer,size_file);
-		buffer[n]='\0';
+		size_file = std::atoi(size_buf);
+		if(size_file > MAX_SIZE) return;
 
-		file=buffer;
+		std::string file;
+		file.reserve(size_file);
 
-		n=read(SocketFD,buffer,5);
-		buffer[n]='\0';
+		char buffer[10];
 
-		size_file_name=std::atoi(buffer);
+		int total = 0;
+		while(total < size_file){
+			int to_read = std::min(10, size_file - total);
+			int n = read(SocketFD, buffer, to_read);
 
-		n=read(SocketFD,buffer,size_file_name);
-		buffer[n]='\0';
+			if(n <= 0) return;
 
-		file_name=buffer;
-
-		n=read(SocketFD,buffer,5);
-		buffer[n]='\0';
-
-		size_orig=std::atoi(buffer);
-
-		n=read(SocketFD,buffer,size_orig);
-		buffer[n]='\0';
-
-		origin=buffer;
-
-		std::cout << " --------------THE FILE SENDED IS CALLED -> " << file_name << "-----------------" << std::endl;
-		std::cout << " --------------SENDED  BY: " << origin << "-------------------------------------" << std::endl;
-		std::cout << " --------------THE CONTENT IS: -----------------------------------------------" << std::endl;
-		std::cout << file << std::endl;
-
-		std::ofstream ofs("bible2.txt", std::ios::binary);
-
-		size_t total = file.size();
-		size_t pos = 0;
-
-		while (pos < total) {
-			size_t chunk_size = std::min((size_t)10, total - pos);
-
-			ofs.write(file.data() + pos, chunk_size);
-
-			pos += chunk_size;
+			file.append(buffer, n);
+			total += n;
 		}
 
+		if(read(SocketFD, size_buf, 5) <= 0) return;
+		size_buf[5] = '\0';
+
+		size_file_name = std::atoi(size_buf);
+
+		total = 0;
+		file_name.clear();
+
+		while(total < size_file_name){
+			int to_read = std::min(10, size_file_name - total);
+			int n = read(SocketFD, buffer, to_read);
+
+			if(n <= 0) return;
+
+			file_name.append(buffer, n);
+			total += n;
+		}
+
+		if(read(SocketFD, size_buf, 5) <= 0) return;
+		size_buf[5] = '\0';
+
+		size_orig = std::atoi(size_buf);
+
+		total = 0;
+		origin.clear();
+
+		while(total < size_orig){
+			int to_read = std::min(10, size_orig - total);
+			int n = read(SocketFD, buffer, to_read);
+
+			if(n <= 0) return;
+
+			origin.append(buffer, n);
+			total += n;
+		}
+
+		std::cout << "FILE: " << file_name << "\nFROM: " << origin << std::endl;
+
+		std::ofstream ofs("2" + file_name, std::ios::binary);
+		ofs.write(file.data(), file.size());
 	}
 
 	void Cases_Client(char type, int n, int SocketFD) {
