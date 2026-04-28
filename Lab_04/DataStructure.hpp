@@ -175,12 +175,15 @@ public:
 
 		char size_buf[6];
 
-		if(read(SocketFD, size_buf, 5) <= 0) return;
+		if(read(SocketFD, size_buf, 5) <= 0){
+			return;
+		}
 		size_buf[5] = '\0';
 
 		size_content = std::atoi(size_buf);
-		if(size_content > MAX_SIZE) return;
-
+		if(size_content > MAX_SIZE){
+			 return;
+		}
 		char buffer[10];
 		int total = 0;
 		content.clear();
@@ -190,13 +193,17 @@ public:
 			int to_read = std::min(10, size_content - total);
 			int n = read(SocketFD, buffer, to_read);
 
-			if(n <= 0) return;
+			if(n <= 0){
+				return;
+			} 
 
 			content.append(buffer, n);
 			total += n;
 		}
 
-		if(read(SocketFD, size_buf, 5) <= 0) return;
+		if(read(SocketFD, size_buf, 5) <= 0){
+			return;
+		} 
 		size_buf[5] = '\0';
 
 		size_file_name = std::atoi(size_buf);
@@ -453,7 +460,9 @@ public:
 		const int MAX_SIZE = 99999;
 
 		std::ifstream file(file_name, std::ios::binary);
-		if(!file.is_open()) return;
+		if(!file.is_open()) {
+			return;
+		}
 
 		std::string msg;
 		msg.reserve(MAX_SIZE);
@@ -465,7 +474,9 @@ public:
 			file.read(buffer, std::min(10, MAX_SIZE - (int)msg.size()));
 			int readed = file.gcount();
 
-			if(readed <= 0) break;
+			if(readed <= 0){
+				break;
+			} 
 
 			msg.append(buffer, readed);
 		}
@@ -499,7 +510,9 @@ public:
 		size_buf[5] = '\0';
 
 		size_file = std::atoi(size_buf);
-		if(size_file > MAX_SIZE) return;
+		if(size_file > MAX_SIZE){
+			return;
+		} 
 
 		std::string file;
 		file.reserve(size_file);
@@ -511,13 +524,17 @@ public:
 			int to_read = std::min(10, size_file - total);
 			int n = read(SocketFD, buffer, to_read);
 
-			if(n <= 0) return;
+			if(n <= 0){
+				return;
+			} 
 
 			file.append(buffer, n);
 			total += n;
 		}
 
-		if(read(SocketFD, size_buf, 5) <= 0) return;
+		if(read(SocketFD, size_buf, 5) <= 0){
+			return;
+		} 
 		size_buf[5] = '\0';
 
 		size_file_name = std::atoi(size_buf);
@@ -529,13 +546,17 @@ public:
 			int to_read = std::min(10, size_file_name - total);
 			int n = read(SocketFD, buffer, to_read);
 
-			if(n <= 0) return;
+			if(n <= 0) {
+				return;
+			}
 
 			file_name.append(buffer, n);
 			total += n;
 		}
 
-		if(read(SocketFD, size_buf, 5) <= 0) return;
+		if(read(SocketFD, size_buf, 5) <= 0){
+			return;
+		} 
 		size_buf[5] = '\0';
 
 		size_orig = std::atoi(size_buf);
@@ -547,13 +568,14 @@ public:
 			int to_read = std::min(10, size_orig - total);
 			int n = read(SocketFD, buffer, to_read);
 
-			if(n <= 0) return;
-
+			if(n <= 0) {
+				return;
+			}
 			origin.append(buffer, n);
 			total += n;
 		}
 
-		std::cout << "FILE: " << file_name << "\nFROM: " << origin << std::endl;
+		std::cout << "FILE: " << file_name << std::endl << "FROM: " << origin << std::endl;
 
 		std::ofstream ofs("2" + file_name, std::ios::binary);
 		ofs.write(file.data(), file.size());
