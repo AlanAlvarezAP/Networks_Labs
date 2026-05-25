@@ -88,7 +88,7 @@ void read_thread_UDP(int SocketFD){
 
 		buffer[n] = '\0';
 		if(buffer[8]=='F'){
-			clp_UDP.Cases_Client_UDP(buffer[8],buffer,SocketFD,sender);
+			clp_UDP.Cases_Client_UDP('f',buffer,SocketFD,sender);
 		}else{
 			clp_UDP.Cases_Client_UDP(buffer[0],buffer,SocketFD,sender);
 		}
