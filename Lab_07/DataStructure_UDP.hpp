@@ -383,7 +383,7 @@ public:
 	    global_seq++;
 	}
 
-    void File_read(std::string& buffer){
+    void File_read(const std::string& buffer){
 	    int pos = 0;
 		
 	    int total_fragments=std::atoi(buffer.substr(pos,2).c_str());
