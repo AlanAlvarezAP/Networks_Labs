@@ -87,7 +87,7 @@ void read_thread_UDP(int SocketFD){
         }
 
 		buffer[n] = '\0';
-		clp_UDP.Cases_Client_UDP(buffer,SocketFD,sender);
+		clp_UDP.Cases_Client_UDP(buffer[0],buffer,SocketFD,sender);
     }
 }
 
@@ -147,7 +147,7 @@ int main(void){
         if(connection_type == TCP){
             clp_TCP.Cases_Client(option,n,SocketFD);
         }else{
-            clp_UDP.Cases_Client_UDP(std::string{option},SocketFD,stSockAddr);
+            clp_UDP.Cases_Client_UDP(option,std::string{option},SocketFD,stSockAddr);
         }
         
     }
