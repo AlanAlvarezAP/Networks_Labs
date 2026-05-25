@@ -40,33 +40,25 @@ std::string number_to_string(int number,int size) {
 
 }
 
-void print_map(std::unordered_map<std::string,int> little_map){
+/*void print_map(std::unordered_map<std::string,int> little_map){
 	std::cout << "------------------------------------------MAP STATE -----------------------------" << std::endl;
 	for(auto &p:little_map){
 		std::cout << " We have person " << p.first << " with socket " << p.second << std::endl;
 	}
 	std::cout << "---------------------------------------------------------------------------------" << std::endl;
 
-}
+}*/
 
 class Server_Protocols_UDP {
 public:
-	std::unordered_map<std::string, int> little_map;
+	std::unordered_map<std::string, sockaddr_in> little_map;
 
-	std::string Login(int n, int SocketFD) {
-		char buffer[256];
-
-		bzero(buffer, 256);
-
-		n = read(SocketFD, buffer, 4);
-		buffer[n] = '\0';
-
-		int size_name = std::atoi(buffer);
-
-		n = read(SocketFD, buffer, size_name);
-		buffer[n]='\0';
-		return buffer;
-
+	std::string Login(std::string& packet,int SocketFD,sockaddr_in& sender) {
+		int size_name=std::stoi(packet.substr(1,4));
+		std::string nickname=packet.substr(5,size_name);
+		if(little_map.find(nickname) != little_map.end()){
+			
+		}
 	}
 	
 	void Broadcast(int n, int SocketFD) {
