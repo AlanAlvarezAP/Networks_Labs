@@ -437,8 +437,8 @@ public:
 	    if(received_checksum != calculated_checksum){
 			// TODO ADD THE NACK
 	        std::cout<< "Checksum error in fragment " << current_fragment<< " of file " << file_name<< std::endl;
-			std::cout << "CHECKSUM RECEIVED: " << received_checksum << std::endl;
-			std::cout << "CHECKSUM CALCULATED: " << received_checksum << std::endl;
+			std::cout << "CHECKSUM RECEIVED: " << (int)(unsigned char)received_checksum << std::endl;
+			std::cout << "CHECKSUM CALCULATED: " << (int)(unsigned char)calculated_checksum << std::endl;
 	        return;
 	    }
 	
