@@ -1,9 +1,19 @@
 /* Server code in C */
 #include "DataStructure.hpp"
+#include "DataStructure_UDP.hpp"
 
 Server_Protocols sv;
+Server_Protocols_UDP sv_UDP;
 
-void read_thread(int n,int SocketFD){
+enum TypeConnection{
+    TCP,
+    UDP
+};
+
+TypeConnection connection_type;
+
+
+void read_thread_TCP(int n,int SocketFD){
     char buffer;
     for(;;){
         n = read(SocketFD, &buffer, 1);
@@ -24,10 +34,44 @@ void read_thread(int n,int SocketFD){
     
 }
 
+void read_thread_UDP(int SocketFD){
+    char buffer[500];
+    sockaddr_in sender;
+    socklen_t len=sizeof(sender);
+    while(true){
+        int n=recvfrom(SocketFD,buffer,sizeof(buffer),0,(sockaddr*)&sender,&len);
+
+        if(n<=0){
+            continue;
+        }
+
+        /* Read the file content and used their respectives cases
+
+        */
+    }
+}
+
+
 int main(void){
+    int option;
+
+    std::cout << "What type of connection you want? " << std::endl;
+    std::cout << "1.TCP" << std::endl;
+    std::cout << "2.UDP" << std::endl;
+    std::cin >> option;
+
+    connection_type=(option==1)?TCP:UDP;
+
+
     struct sockaddr_in stSockAddr;
-    int ServerFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
-    char buffer[256];
+    int ServerFD;
+    
+    if(connection_type == TCP){
+        ServerFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    }else{
+        ServerFD = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    }
+    
     int n;
  
     memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
@@ -38,12 +82,19 @@ int main(void){
  
     bind(ServerFD,(const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
  
-    listen(ServerFD, 10);
     
-    int ClientFD=0;
-    for(;;){
-        ClientFD=accept(ServerFD,NULL,NULL);
-        std::thread (read_thread,n,ClientFD).detach();
+    int ClientFD;
+    if(connection_type == TCP){
+        listen(ServerFD, 10);
+
+        for(;;){
+            ClientFD = accept(ServerFD,NULL,NULL);
+            std::thread(read_thread_TCP,0,ClientFD).detach();
+        }
+    }else{
+        for(;;){
+            std::thread(read_thread_UDP,ClientFD).detach();
+        }
     }
  
     shutdown(ClientFD, SHUT_RDWR);

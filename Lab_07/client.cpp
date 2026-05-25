@@ -1,7 +1,16 @@
 /* Client code in C */ 
 #include "DataStructure.hpp"
+#include "DataStructure_UDP.hpp"
 
-Client_Protocols clp;
+Client_Protocols clp_TCP;
+Client_Protocols_UDP clp_UDP;
+
+enum TypeConnection{
+    TCP,
+    UDP
+};
+
+TypeConnection connection_type;
 
 void print_menu() {
     std::cout << "===================================" << std::endl;
@@ -43,32 +52,64 @@ char Cast_Option(int option){
 	}
 }
 
-void read_thread(int n,int SocketFD){
+void read_thread_TCP(int n,int SocketFD){
     char buffer;
-    while (clp.running) {
+    while (clp_TCP.running) {
         n = read(SocketFD, &buffer, 1);
         if(n == 0){
             std::cout << "Server closed connection because of logout :D " << std::endl;
             close(SocketFD);
-	        clp.running=false;
-	        clp.logging_status=false;
+	        clp_TCP.running=false;
+	        clp_TCP.logging_status=false;
             break;
         }
         else if (n < 0) {
             std::cout << "Disconection from server because of an ERROR..." << std::endl;
             close(SocketFD);
-	        clp.running=false;
-	        clp.logging_status=false;
+	        clp_TCP.running=false;
+	        clp_TCP.logging_status=false;
             break;
         }
-        clp.Cases_Client(buffer, n, SocketFD);
+        clp_TCP.Cases_Client(buffer, n, SocketFD);
     }
      
 }
 
+void read_thread_UDP(int SocketFD){
+    char buffer[500];
+    sockaddr_in sender;
+    socklen_t len=sizeof(sender);
+    while(true){
+        int n=recvfrom(SocketFD,buffer,sizeof(buffer),0,(sockaddr*)&sender,&len);
+
+        if(n<=0){
+            continue;
+        }
+
+        /* Add clients with their cases and also verification if its NACK or ACK
+
+        */
+    }
+}
+
 int main(void){
+    int option;
+
+    std::cout << "What type of connection you want? " << std::endl;
+    std::cout << "1.TCP" << std::endl;
+    std::cout << "2.UDP" << std::endl;
+    std::cin >> option;
+
+    connection_type=(option==1)?TCP:UDP;
+
     struct sockaddr_in stSockAddr;
-    int SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    int SocketFD;
+    if(connection_type == TCP){
+        SocketFD = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
+    }else{
+        SocketFD = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
+    }
+    
     int n;
 
     memset(&stSockAddr, 0, sizeof(struct sockaddr_in));
@@ -77,24 +118,37 @@ int main(void){
     stSockAddr.sin_port = htons(45000);
     inet_pton(AF_INET, "127.0.0.1", &stSockAddr.sin_addr);
  
-    connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
+    if(connection_type == TCP){
+        connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
+        std::thread(read_thread_TCP,n,SocketFD).detach();    
+    }else{
+        std::thread(read_thread_UDP,SocketFD).detach();
+    }
+    
 
-    clp.running = true;
+    clp_TCP.running = true;
+    clp_UDP.running = true;
     print_menu();
 
-    std::thread(read_thread,n,SocketFD).detach();
-    while(clp.running) {
+    
+    while((clp_TCP.running || clp_UDP.running)) {
         std::cout << "SELECT AN ACTION :D " << std::endl;
         int action;
         std::cin >> action;
 	    std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         char option = Cast_Option(action);
-        if (option != 'L' && clp.logging_status == false) {
-                std::cout << "You are not logged in, try logging pls :D" << std::endl;
-                print_menu();
-                continue;
+        if (option != 'L' && (clp_TCP.logging_status == false || clp_UDP.logging_status == false)) {
+            std::cout << "You are not logged in, try logging pls :D" << std::endl;
+            print_menu();
+            continue;
         }
-        clp.Cases_Client(option, n, SocketFD);
+
+        if(connection_type == TCP){
+            clp_TCP.Cases_Client(option, n, SocketFD);
+        }else{
+            clp_UDP.Cases_Client_UDP(option, SocketFD);
+        }
+        
     }
     std::cout << " LEAVING ... " << std::endl;
     return 0;
