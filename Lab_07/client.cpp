@@ -85,10 +85,7 @@ void read_thread_UDP(int SocketFD){
         if(n<=0){
             continue;
         }
-
-        /* Add clients with their cases and also verification if its NACK or ACK
-
-        */
+		clp_UDP.Cases_Client_UDP(buffer[0],SocketFD,sender);
     }
 }
 
@@ -144,9 +141,9 @@ int main(void){
         }
 
         if(connection_type == TCP){
-            clp_TCP.Cases_Client(option, n, SocketFD);
+            clp_TCP.Cases_Client(option, n,SocketFD);
         }else{
-            clp_UDP.Cases_Client_UDP(option, SocketFD);
+            clp_UDP.Cases_Client_UDP(option,SocketFD,stSockAddr);
         }
         
     }
