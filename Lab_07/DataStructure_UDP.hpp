@@ -504,19 +504,20 @@ public:
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
 			//std::cout << packet << std::endl;
 			sf.packets[i] = packet;
-	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
+	        sendto(client_socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
 	    }
 		sent_files[global_seq] = std::move(sf);
+		SentFile& current_file = sent_files[global_seq];
 		for(int i=0;i<total_fragments;i++){
 		    waiting_ACK = true;
-		    sendto(client_socket,sf.packets[i].data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
+		    sendto(client_socket,current_file.packets[i].data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
 		    auto starting = std::chrono::steady_clock::now();
 		    while(waiting_ACK){
 			    auto now = std::chrono::steady_clock::now();
 			    auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(now-starting).count();
 			    if(elapsed > 1000){
 			        std::cout << "TIMEOUT -> retransmitting fragment " << i+1<< std::endl;
-					sendto(client_socket,sf.packets[i].data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
+					sendto(client_socket,current_file.packets[i].data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
 			        starting = std::chrono::steady_clock::now();
 			    }
 			}
