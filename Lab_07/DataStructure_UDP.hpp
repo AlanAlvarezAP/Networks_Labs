@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <thread>
+#include <chrono>
 #include <unordered_map>
 #include <limits>
 #include <fstream>
@@ -276,12 +277,8 @@ public:
 		static bool corrupt_once = true;
 		if(corrupt_once){
 		    corrupt_once = false;
-		    buffer_modificado = corrupt_once;
-		    buffer_modificado[5] = 'X';
+		    content[5] = 'X';
 		    std::cout << "[Test] Corrupting packet" << std::endl;
-		}
-		else{
-		    buffer_modificado = buffer;
 		}
 			   
 	    char received_checksum =buffer[pos];
