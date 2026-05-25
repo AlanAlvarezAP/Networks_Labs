@@ -504,9 +504,9 @@ public:
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
 			//std::cout << packet << std::endl;
 			sf.packets[i] = packet;
-			waiting_ack = true;
+			waiting_ACK = true;
 	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
-			auto start = std::chrono::steady_clock::now();
+			auto starting = std::chrono::steady_clock::now();
 		
 			while(waiting_ack){
 			    auto now = std::chrono::steady_clock::now();
@@ -514,7 +514,7 @@ public:
 			    if(elapsed > 1000){
 			        std::cout << "TIMEOUT -> retransmitting fragment " << i+1<< std::endl;
 					sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
-			        start = std::chrono::steady_clock::now();
+			        starting = std::chrono::steady_clock::now();
 			    }
 			}
 	    }
