@@ -120,7 +120,7 @@ void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& serve
 
         if(complete){
             std::cout<< "Transfer "<< seq<< " completed"<< std::endl;
-            global_seq+= file.file_size;
+            global_seq++;
 			sent_files.erase(it);
         }
 
@@ -276,7 +276,7 @@ public:
 		static bool corrupt_once = true;
 		if(corrupt_once){
 		    corrupt_once = false;
-		    content[5] = 'X';
+		    content[0] = 'X';
 		    std::cout << "[Test] Corrupting packet" << std::endl;
 		}
 		/*static bool delay_once = true;
