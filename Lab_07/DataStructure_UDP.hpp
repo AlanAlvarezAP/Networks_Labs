@@ -15,6 +15,8 @@
 #include <sstream>
 #include "json.hpp"
 
+#define DATAGRAM_SIZE 500
+
 typedef nlohmann::json json;
 
 std::string number_to_string_2(int number, int size) {
@@ -32,6 +34,28 @@ std::string number_to_string_2(int number, int size) {
         result[count--] = '0';
     }
     return result;
+}
+
+int Calculate_Max_Content(std::string& destination,std::string& file_name,std::string& origin){
+    int header_size = 0;
+    header_size += 14;
+    header_size += destination.size();
+
+    header_size += 3;
+    header_size += file_name.size();
+
+    header_size += 5;
+    header_size += origin.size();
+    header_size += 35;
+    return DATAGRAM_SIZE - header_size;
+}
+
+unsigned char Calculate_Checksum(std::string& content){
+    unsigned int sum = 0;
+    for(unsigned char c : content)
+        sum += c;
+
+    return static_cast<unsigned char>(sum % 256);
 }
 
 void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
@@ -134,46 +158,27 @@ public:
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
-    void File_redirect(const std::string& buffer, int server_socket, sockaddr_in& client_addr) {
-        const int MAX_SIZE = 99999;
-        
-        std::string size_str = buffer.substr(1, 5);
-        int size_content = std::atoi(size_str.c_str());
-        
-        if (size_content > MAX_SIZE || buffer.length() < 1 + 5 + size_content + 5){
-			return;
-		}
-        
-        std::string content = buffer.substr(6, size_content);
-        
-        size_str = buffer.substr(6 + size_content, 5);
-        int size_file_name = std::atoi(size_str.c_str());
-        
-        std::string file_name = buffer.substr(6 + size_content + 5, size_file_name);
-        
-        size_str = buffer.substr(6 + size_content + 5 + size_file_name, 5);
-        int size_dest = std::atoi(size_str.c_str());
-        std::string dest = buffer.substr(6 + size_content + 5 + size_file_name + 5, size_dest);
-		
-        if (client_map.find(dest) == client_map.end()) {
-            std::string error_msg = "ERROR destination for file not found :( ";
-            std::string final_msg = "E" + number_to_string_2(error_msg.size(), 5) + error_msg;
+   void File_redirect(std::string& buffer,int server_socket,sockaddr_in& client_addr){
+	    int pos=0;
+	    pos += 9;
+	    int size_dest=std::atoi(buffer.substr(pos,5).c_str());
+	    pos += 5;
+	   
+	    std::string destination=buffer.substr(pos,size_dest);
+	   
+	    if(client_map.find(destination)==client_map.end()){
+			std::string error_msg="ERROR destination not in the server for file";
+            int size_error=error_msg.size();
+            std::string final_msg="E" + number_to_string_2(size_error, 5) + error_msg;
             sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
             return;
-        }
-        
-        std::string orig;
-        for (auto& pair : client_map) {
-            if (pair.second.sin_addr.s_addr == client_addr.sin_addr.s_addr && pair.second.sin_port == client_addr.sin_port) {
-                orig = pair.first;
-                break;
-            }
-        }
-        std::string final_msg = "f" + number_to_string_2(size_content, 5) + content + number_to_string_2(size_file_name, 5) + file_name + number_to_string_2(orig.size(), 5) + orig;
-        
-        sockaddr_in dst_addr = client_map.find(dest)->second;
-        sendto(server_socket, final_msg.data(), final_msg.size(), 0,(sockaddr*)&dst_addr, sizeof(dst_addr));
-    }
+	    }
+	
+	    sockaddr_in dst =client_map[destination];
+	   	std::cout << "Server received file to -> " << size_dest << " to -> " << destination << " with the datagram format of" << std::endl;
+		std::cout << buffer << std::endl;
+	    sendto(server_socket,buffer.data(),500,0,(sockaddr*)&dst,sizeof(dst));
+	}
 
     void Logout(int server_socket, sockaddr_in& client_addr) {
         std::string author;
@@ -228,10 +233,22 @@ public:
     }
 };
 
+struct FileAssembly{
+    int total_fragments;
+
+    std::string file_name;
+    std::string origin;
+
+    std::vector<std::string> fragments;
+    std::vector<bool> received;
+};
+
 class Client_Protocols_UDP {
 public:
     bool logging_status = false, running = false;
-
+	int global_seq = 1;
+	std::unordered_map<int,FileAssembly> pending_files;
+public:
     void Error(const std::string& buffer) {
         std::string size_str = buffer.substr(1, 5);
         int size_msg = std::atoi(size_str.c_str());
@@ -310,55 +327,163 @@ public:
         std::cout << js.dump(4) << std::endl;
     }
 
-    void Send_File(int client_socket, sockaddr_in& server_addr, std::string file_name, std::string destination) {
-        const int MAX_SIZE = 99999;
-        std::ifstream file(file_name, std::ios::binary);
-        if (!file.is_open()) {
-            std::cout << "Error: Could not open file " << file_name << std::endl;
-            return;
-        }
-        
-        std::stringstream buffer;
-        buffer << file.rdbuf();
-        std::string msg = buffer.str();
-        
-        if (msg.size() > MAX_SIZE) {
-            msg.resize(MAX_SIZE);
-        }
-        if (file_name.size() > MAX_SIZE){
-			file_name.resize(MAX_SIZE);
-		}
-        if (destination.size() > MAX_SIZE){
-			destination.resize(MAX_SIZE);
-		}
-        
-        std::string final_msg = "F" + number_to_string_2(msg.size(), 5) + msg + number_to_string_2(file_name.size(), 5) + file_name + number_to_string_2(destination.size(), 5) + destination;
-        
-        sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
-    }
+    void Send_File(int client_socket,sockaddr_in& server_addr){
+		std::string file_name,destination,origin;
+		std::cout << "Give me the file name" << std::endl;
+		std::cin >> file_name;
 
-    void File_read(const std::string& buffer) {
-        const int MAX_SIZE = 99999;
-        
-        std::string size_str = buffer.substr(1, 5);
-        int size_file = std::atoi(size_str.c_str());
-        
-        std::string file = buffer.substr(6, size_file);
-        
-        size_str = buffer.substr(6 + size_file, 5);
-        int size_file_name = std::atoi(size_str.c_str());
-        
-        std::string file_name = buffer.substr(6 + size_file + 5, size_file_name);
-        
-        size_str = buffer.substr(6 + size_file + 5 + size_file_name, 5);
-        int size_orig = std::atoi(size_str.c_str());
-        
-        std::string origin = buffer.substr(6 + size_file + 5 + size_file_name + 5, size_orig);
-        
-        std::cout << "FILE: " << file_name << std::endl << "FROM: " << origin << std::endl;
-        std::ofstream ofs("received_" + file_name, std::ios::binary);
-        ofs.write(file.data(), file.size());
-    }
+		std::cout << "Give me the name of the destination" << std::endl;
+		std::cin >> destination;
+
+		std::cout << "Give your nickname" << std::endl;
+		std::cin >> origin;
+		
+	    std::ifstream file(file_name,std::ios::binary);
+	
+	    if(!file.is_open()){
+	        std::cout << "Could not open file" << std::endl;
+	        return;
+	    }
+	
+	    std::stringstream ss;
+	    ss << file.rdbuf();
+	    std::string complete_file = ss.str();
+	
+	    int max_content =Calculate_Max_Content(destination,file_name,origin);
+	
+	    int total_fragments =(complete_file.size() + max_content - 1)/ max_content;
+	
+	    for(int i=0;i<total_fragments;i++){
+	        int start =i*max_content;
+	
+	        int current_size =std::min(max_content,(int)complete_file.size()-start);
+	        std::string fragment =complete_file.substr(start,current_size);
+	
+	        unsigned char checksum =Calculate_Checksum(fragment);
+	
+	        std::string packet;
+	
+	        packet += number_to_string_2(total_fragments,2);
+	        packet += number_to_string_2(i+1,2);
+	        packet += number_to_string_2(global_seq,4);
+	        packet += 'F';
+	        packet += number_to_string_2(destination.size(),5);
+	        packet += destination;
+	        packet += number_to_string_2(file_name.size(),3);
+	        packet += file_name;
+	        packet += number_to_string_2(origin.size(),5);
+	        packet += origin;
+	        packet += number_to_string_2(i+1,12);
+	        packet += number_to_string_2(fragment.size(),22);
+	        packet += fragment;
+	        packet.push_back(checksum);
+	
+	        while(packet.size() < 500){
+	            packet.push_back('#');
+			}
+			
+			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
+			std::cout << packet << std::endl;
+	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
+	    }
+	    global_seq++;
+	}
+
+    void File_read(std::string& buffer){
+	    int pos = 0;
+		
+	    int total_fragments=std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+
+	    int current_fragment=std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	
+	    int global_seq=std::atoi(buffer.substr(pos,4).c_str());
+	    pos += 4;
+	
+	    char type=buffer[pos++];
+	    int size_dest=std::atoi(buffer.substr(pos,5).c_str());
+	    pos += 5;
+	
+	    std::string destination=buffer.substr(pos,size_dest);
+	    pos += size_dest;
+	
+	    int size_file_name=std::atoi(buffer.substr(pos,3).c_str());
+	    pos += 3;
+	
+	    std::string file_name=buffer.substr(pos,size_file_name);
+	    pos += size_file_name;
+	
+	    int size_origin=std::atoi(buffer.substr(pos,5).c_str());
+	    pos += 5;
+	
+	    std::string origin=buffer.substr(pos,size_origin);
+	    pos += size_origin;
+	
+	    long long fragment_seq=std::atoll(buffer.substr(pos,12).c_str());
+	    pos += 12;
+	
+	    long long size_content=std::atoll(buffer.substr(pos,22).c_str());
+	    pos += 22;
+	
+	    std::string content=buffer.substr(pos,size_content);
+	    pos += size_content;
+	
+	    unsigned char received_checksum=static_cast<unsigned char>(buffer[pos]);
+	    int sum=0;
+	
+	    for(unsigned char c : content){
+	        sum += c;
+	    }
+	    unsigned char calculated_checksum =static_cast<unsigned char>(sum % 256);
+	
+	    if(received_checksum != calculated_checksum){
+			// TODO ADD THE NACK
+	        std::cout<< "Checksum error in fragment " << current_fragment<< " of file " << file_name<< std::endl;
+	        return;
+	    }
+	
+	    if(pending_files.find(global_seq)==pending_files.end()){
+	        FileAssembly assembly;
+	        assembly.total_fragments=total_fragments;
+	        assembly.file_name=file_name;
+	        assembly.origin=origin;
+	
+	        assembly.fragments.resize(total_fragments);
+	        assembly.received.resize(total_fragments,false);
+	
+	        pending_files[global_seq] =std::move(assembly);
+	    }
+	
+	    FileAssembly& assembly=pending_files[global_seq];
+	
+	    assembly.fragments[current_fragment-1]=content;
+	    assembly.received[current_fragment-1]=true;
+	    bool complete = true;
+	
+	    for(bool received :assembly.received){
+	        if(!received){
+	            complete = false;
+	            break;
+	        }
+	    }
+	
+	    if(!complete){
+	        return;
+	    }
+	
+	    std::ofstream ofs("2_" + assembly.file_name,std::ios::binary);
+	
+	    for(auto& fragment: assembly.fragments){
+	        ofs.write(fragment.data(),fragment.size());
+	    }
+	    ofs.close();
+	
+	    std::cout << "File received -> " << assembly.file_name << " from -> " << assembly.origin << " with the datagram format of" << std::endl;
+		std::cout << buffer << std::endl;
+		
+	    pending_files.erase(global_seq);
+	}
 
     void Cases_Client_UDP(char type,const std::string& buffer, int client_socket, sockaddr_in& server_addr) {
         switch (type) {
