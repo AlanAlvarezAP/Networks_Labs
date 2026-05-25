@@ -284,7 +284,7 @@ public:
 		if(delay_once){
 		    delay_once = false;
 		    std::cout << "[Test] Delaying ACK 2 seconds" << std::endl;
-		    std::this_thread::sleep_for(std::chrono::seconds(1));
+		    std::this_thread::sleep_for(std::chrono::seconds(2));
 		}
 	    char received_checksum =buffer[pos];
 	    char calculated_checksum =Calculate_Checksum(content);
