@@ -17,7 +17,7 @@
 
 typedef nlohmann::json json;
 
-std::string number_to_string(int number, int size) {
+std::string number_to_string_2(int number, int size) {
     std::string result(size, ' ');
     int count = size - 1;
     if (number < 0) {
@@ -47,7 +47,7 @@ public:
         if (client_map.find(nickname) != client_map.end()) {
             std::string error_msg = "ERROR nickname already in server";
             int size_error = error_msg.size();
-            std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
+            std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
             sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
         } else {
             client_map[nickname] = client_addr;
@@ -73,7 +73,7 @@ public:
         }
         
         int size_author = author.size();
-        std::string broadcast_msg = "b" + number_to_string(size_author, 3) + author + number_to_string(size_msg, 7) + msg;
+        std::string broadcast_msg = "b" + number_to_string_2(size_author, 3) + author + number_to_string_2(size_msg, 7) + msg;
         
         for (const auto& pair : client_map) {
             sendto(server_socket, broadcast_msg.data(), broadcast_msg.size(), 0, (sockaddr*)&(pair.second), sizeof(pair.second));
@@ -94,7 +94,7 @@ public:
         if (client_map.find(destination) == client_map.end()) {
             std::string error_msg = "ERROR destination not in the server";
             int size_error = error_msg.size();
-            std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
+            std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
             sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
             return;
         }
@@ -108,9 +108,9 @@ public:
         }
         
         int size_auth = author.size();
-        sockaddr_in dst_addr = it->second;
+        sockaddr_in dst_addr = client_map.find(destination)->second;
         
-        std::string final_msg = "u" + number_to_string(size_auth, 7) + author + number_to_string(size_msg, 5) + msg;
+        std::string final_msg = "u" + number_to_string_2(size_auth, 7) + author + number_to_string_2(size_msg, 5) + msg;
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&dst_addr, sizeof(dst_addr));
     }
 
@@ -121,7 +121,7 @@ public:
             js["clients"].push_back(pair.first);
         }
         std::string to_send = js.dump();
-        std::string final_msg = "t" + number_to_string((int)to_send.size(), 5) + to_send;
+        std::string final_msg = "t" + number_to_string_2((int)to_send.size(), 5) + to_send;
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
@@ -148,7 +148,7 @@ public:
 		
         if (client_map.find(dest) == client_map.end()) {
             std::string error_msg = "ERROR destination for file not found :( ";
-            std::string final_msg = "E" + number_to_string(error_msg.size(), 5) + error_msg;
+            std::string final_msg = "E" + number_to_string_2(error_msg.size(), 5) + error_msg;
             sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
             return;
         }
@@ -160,9 +160,9 @@ public:
                 break;
             }
         }
-        std::string final_msg = "f" + number_to_string(size_content, 5) + content + number_to_string(size_file_name, 5) + file_name + number_to_string(orig.size(), 5) + orig;
+        std::string final_msg = "f" + number_to_string_2(size_content, 5) + content + number_to_string_2(size_file_name, 5) + file_name + number_to_string_2(orig.size(), 5) + orig;
         
-        sockaddr_in dst_addr = it->second;
+        sockaddr_in dst_addr = client_map.find(dest)->second;
         sendto(server_socket, final_msg.data(), final_msg.size(), 0,(sockaddr*)&dst_addr, sizeof(dst_addr));
     }
 
@@ -180,7 +180,7 @@ public:
         
         std::string error_msg = "ERROR logout";
         int size_error = error_msg.size();
-        std::string final_msg = "E" + number_to_string(size_error, 5) + error_msg;
+        std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
@@ -237,7 +237,7 @@ public:
         std::cout << "Give me your nickname to send -> ";
         std::getline(std::cin, name);
         int size_msg = name.size();
-        std::string final_msg = "L" + number_to_string(size_msg, 4) + name;
+        std::string final_msg = "L" + number_to_string_2(size_msg, 4) + name;
         
         sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
     }
@@ -247,7 +247,7 @@ public:
         std::cout << "Give me the message to everyone -> ";
         std::getline(std::cin, msg);
         int size_msg = msg.size();
-        std::string final_msg = "B" + number_to_string(size_msg, 7) + msg;
+        std::string final_msg = "B" + number_to_string_2(size_msg, 7) + msg;
         
         sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
     }
@@ -274,7 +274,7 @@ public:
         std::cout << "Give me the destination " << std::endl;
         std::getline(std::cin, nickname_dest);
         int size_dst = nickname_dest.size();
-        std::string final_msg = "U" + number_to_string(size_msg, 5) + msg + number_to_string(size_dst, 7) + nickname_dest;
+        std::string final_msg = "U" + number_to_string_2(size_msg, 5) + msg + number_to_string_2(size_dst, 7) + nickname_dest;
         
         sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
     }
@@ -324,7 +324,7 @@ public:
 			destination.resize(MAX_SIZE);
 		}
         
-        std::string final_msg = "F" + number_to_string(msg.size(), 5) + msg + number_to_string(file_name.size(), 5) + file_name + number_to_string(destination.size(), 5) + destination;
+        std::string final_msg = "F" + number_to_string_2(msg.size(), 5) + msg + number_to_string_2(file_name.size(), 5) + file_name + number_to_string_2(destination.size(), 5) + destination;
         
         sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
     }
