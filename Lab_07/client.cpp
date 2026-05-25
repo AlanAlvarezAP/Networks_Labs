@@ -87,9 +87,6 @@ void read_thread_UDP(int SocketFD){
         }
 
 		buffer[n] = '\0';
-
-        std::cout << "[UDP RECEIVED] "<< buffer<< std::endl;
-		
 		clp_UDP.Cases_Client_UDP(buffer,SocketFD,sender);
     }
 }
