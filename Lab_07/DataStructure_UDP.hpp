@@ -50,12 +50,13 @@ int Calculate_Max_Content(std::string& destination,std::string& file_name,std::s
     return DATAGRAM_SIZE - header_size;
 }
 
-unsigned char Calculate_Checksum(std::string& content){
-    unsigned int sum = 0;
-    for(unsigned char c : content)
+uint8_t Calculate_Checksum(std::string& content){
+    uint32_t sum = 0;
+    for(uint8_t c : std::vector<uint8_t>(content.begin(),content.end())){
         sum += c;
+	}
 
-    return static_cast<unsigned char>(sum % 256);
+    return static_cast<uint8_t>(sum % 256);
 }
 
 void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
@@ -353,7 +354,7 @@ public:
 	        int current_size =std::min(max_content,(int)complete_file.size()-start);
 	        std::string fragment =complete_file.substr(start,current_size);
 	
-	        unsigned char checksum =Calculate_Checksum(fragment);
+	        uint8_t checksum =Calculate_Checksum(fragment);
 	
 	        std::string packet;
 	
@@ -370,7 +371,7 @@ public:
 	        packet += number_to_string_2(i+1,12);
 	        packet += number_to_string_2(fragment.size(),22);
 	        packet += fragment;
-	        packet.push_back(checksum);
+	        packet.push_back(static_cast<char>(checksum));
 	
 	        while(packet.size() < 500){
 	            packet.push_back('#');
@@ -423,21 +424,21 @@ public:
 	    std::string content=buffer.substr(pos,size_content);
 	    pos += size_content;
 	
-	    unsigned char received_checksum=static_cast<unsigned char>(buffer[pos]);
-	    int sum=0;
+	    uint8_t received_checksum=static_cast<uint8_t>(buffer[pos]);
+	    uint32_t sum=0;
 	
-	    for(unsigned char c : content){
+	    for(uint8_t c : std::vector<uint8_t>(content.begin(),content.end())){
 	        sum += c;
 	    }
-	    unsigned char calculated_checksum =static_cast<unsigned char>(sum % 256);
+	   	uint8_t calculated_checksum =static_cast<uint8_t>(sum % 256);
 
 		
 		
 	    if(received_checksum != calculated_checksum){
 			// TODO ADD THE NACK
 	        std::cout<< "Checksum error in fragment " << current_fragment<< " of file " << file_name<< std::endl;
-			std::cout << "CHECKSUM RECEIVED: " << (int)received_checksum << std::endl;
-			std::cout << "CHECKSUM CALCULATED: " << (int)received_checksum << std::endl;
+			std::cout << "CHECKSUM RECEIVED: " << received_checksum << std::endl;
+			std::cout << "CHECKSUM CALCULATED: " << received_checksum << std::endl;
 	        return;
 	    }
 	
