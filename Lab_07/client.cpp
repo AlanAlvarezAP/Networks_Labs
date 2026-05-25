@@ -87,7 +87,7 @@ void read_thread_UDP(int SocketFD){
         }
 
 		std::string datagram(buffer,n);
-		if(datagram[8]=='F'){
+		if(datagram.size() > 8 && datagram[8]=='F'){
 			clp_UDP.Cases_Client_UDP('f',buffer,SocketFD,sender);
 		}else{
 			clp_UDP.Cases_Client_UDP(datagram[0],buffer,SocketFD,sender);
