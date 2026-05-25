@@ -141,7 +141,7 @@ int main(void){
         std::cin >> action;
 	    std::cin.ignore(std::numeric_limits<std::streamsize>::max(),'\n');
         char option = Cast_Option(action);
-        if (option != 'L' && (clp_TCP.logging_status == false || clp_UDP.logging_status == false)) {
+        if (option != 'L' && (clp_TCP.logging_status == false && clp_UDP.logging_status == false)) {
             std::cout << "You are not logged in, try logging pls :D" << std::endl;
             print_menu();
             continue;
