@@ -327,14 +327,8 @@ public:
         std::cout << js.dump(4) << std::endl;
     }
 
-    void Send_File(int client_socket,sockaddr_in& server_addr){
-		std::string file_name,destination,origin;
-		std::cout << "Give me the file name" << std::endl;
-		std::cin >> file_name;
-
-		std::cout << "Give me the name of the destination" << std::endl;
-		std::cin >> destination;
-
+    void Send_File(int client_socket,sockaddr_in& server_addr,std::string& file_name,std::string& destination){
+		std::string origin;
 		std::cout << "Give your nickname" << std::endl;
 		std::cin >> origin;
 		
