@@ -176,7 +176,7 @@ public:
 	
 	    sockaddr_in dst =client_map[destination];
 	   	std::cout << "Server received file to -> " << size_dest << " to -> " << destination << " with the datagram format of" << std::endl;
-		//std::cout << buffer << std::endl;
+		std::cout << buffer << std::endl;
 	    sendto(server_socket,buffer.data(),500,0,(sockaddr*)&dst,sizeof(dst));
 	}
 
@@ -377,7 +377,7 @@ public:
 			}
 			
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
-			//std::cout << packet << std::endl;
+			std::cout << packet << std::endl;
 	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
 	    }
 	    global_seq++;
@@ -474,7 +474,7 @@ public:
 	    ofs.close();
 	
 	    std::cout << "File received -> " << assembly.file_name << " from -> " << assembly.origin << " with the datagram format of" << std::endl;
-		//std::cout << buffer << std::endl;
+		std::cout << buffer << std::endl;
 		
 	    pending_files.erase(global_seq);
 	}
