@@ -94,7 +94,7 @@ std::string Create_ACKNACK(char type,int seq,int total,int current){
     return packet;
 }
 
-void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& server_addr,bool ack,std::unordered_map<int,SentFile> &sent_files){
+void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& server_addr,bool ack,bool &waiting_ACK,std::unordered_map<int,SentFile> &sent_files){
     int seq=std::atoi(buffer.substr(1,4).c_str());
     int total=std::atoi(buffer.substr(5,2).c_str());
     int current =std::atoi(buffer.substr(7,2).c_str());
@@ -105,7 +105,7 @@ void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& serve
     }
 
     SentFile& file = it->second;
-	
+	waiting_ACK=false;
 	if(ack){
         sent_files[seq].acked[current-1] = true;
 
@@ -115,7 +115,7 @@ void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& serve
                 complete = false;
                 break;
             }
-			std::cout << "Seq=" << seq << " fragment=" << current << "/" << total << std::endl;
+			//std::cout << "Seq=" << seq << " fragment=" << current << "/" << total << std::endl;
         }
 
         if(complete){
@@ -272,7 +272,18 @@ public:
 	
 	    std::string content=buffer.substr(pos,size_content);
 	    pos += size_content;
-	
+
+		static bool corrupt_once = true;
+		if(corrupt_once){
+		    corrupt_once = false;
+		    buffer_modificado = corrupt_once;
+		    buffer_modificado[5] = 'X';
+		    std::cout << "[Test] Corrupting packet" << std::endl;
+		}
+		else{
+		    buffer_modificado = buffer;
+		}
+			   
 	    char received_checksum =buffer[pos];
 	    char calculated_checksum =Calculate_Checksum(content);
 	
@@ -311,6 +322,12 @@ public:
         std::string error_msg = "ERROR logout";
         int size_error = error_msg.size();
         std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
+		static bool delay_once = true;
+		if(delay_once){
+		    delay_once = false;
+		    std::cout << "[Test] Delaying ACK 2 seconds" << std::endl;
+		    std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
@@ -350,7 +367,7 @@ public:
 
 class Client_Protocols_UDP {
 public:
-    bool logging_status = false, running = false;
+    bool logging_status = false, running = false,waiting_ACK=false;
 	std::unordered_map<int,FileAssembly> pending_files;
 	std::unordered_map<int,SentFile> sent_files;
 public:
@@ -490,7 +507,19 @@ public:
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
 			//std::cout << packet << std::endl;
 			sf.packets[i] = packet;
+			waiting_ack = true;
 	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
+			auto start = std::chrono::steady_clock::now();
+		
+			while(waiting_ack){
+			    auto now = std::chrono::steady_clock::now();
+			    auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(now-start).count();
+			    if(elapsed > 1000){
+			        std::cout << "TIMEOUT -> retransmitting fragment " << i+1<< std::endl;
+					sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
+			        start = std::chrono::steady_clock::now();
+			    }
+			}
 	    }
 		sent_files[global_seq] = std::move(sf);
 	}
@@ -625,12 +654,12 @@ public:
 	                break;
 				}
 				std::cout << "[ACK] -> ";
-				NACKACK_read(buffer,client_socket,server_addr,true,sent_files);
+				NACKACK_read(buffer,client_socket,server_addr,true,waiting_ACK,sent_files);
                 break;
             }
 			case 'k':{
 				std::cout << "[NACK] -> ";
-				NACKACK_read(buffer,client_socket,server_addr,false,sent_files);
+				NACKACK_read(buffer,client_socket,server_addr,false,waiting_ACK,sent_files);
 				break;
 			}
             case 'E': {
