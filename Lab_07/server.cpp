@@ -48,7 +48,7 @@ void read_thread_UDP(int SocketFD){
 
         buffer[n] = '\0';
 
-        sv_UDP.Cases_Server(buffer, SocketFD, sender);
+        sv_UDP.Cases_Server(buffer[0],buffer, SocketFD, sender);
     }
 }
 
