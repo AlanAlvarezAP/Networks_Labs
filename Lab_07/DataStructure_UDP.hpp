@@ -34,6 +34,12 @@ std::string number_to_string_2(int number, int size) {
     return result;
 }
 
+void print(){
+	for(const auto& cliente : clientes){
+	    std::cout << "ID: " << cliente.first << std::endl;
+	}
+}
+
 class Server_Protocols_UDP {
 public:
     std::unordered_map<std::string, sockaddr_in> client_map;
@@ -53,6 +59,7 @@ public:
             client_map[nickname] = client_addr;
             char k = 'K';
             sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
+			print();
         }
         
         return nickname;
@@ -174,6 +181,7 @@ public:
                 client_map.erase(it);
                 char k = 'K';
                 sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
+				print();
                 return;
             }
         }
