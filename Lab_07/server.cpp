@@ -35,7 +35,7 @@ void read_thread_TCP(int n,int SocketFD){
 }
 
 void read_thread_UDP(int SocketFD){
-    char buffer[501];
+    char buffer[500];
     sockaddr_in sender;
     socklen_t len = sizeof(sender);
 
@@ -47,7 +47,7 @@ void read_thread_UDP(int SocketFD){
         }
 
         std::string datagram(buffer,n);
-        if(datagram[8]=='F'){
+        if(datagram.size() > 8 && datagram[8]=='F'){
             sv_UDP.Cases_Server(datagram[8],buffer, SocketFD, sender);
         }else{
             sv_UDP.Cases_Server(datagram[0],buffer, SocketFD, sender);
