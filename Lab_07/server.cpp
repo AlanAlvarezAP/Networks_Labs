@@ -48,9 +48,9 @@ void read_thread_UDP(int SocketFD){
 
         std::string datagram(buffer,n);
         if(datagram[8]=='F'){
-            sv_UDP.Cases_Server(buffer[8],buffer, SocketFD, sender);
+            sv_UDP.Cases_Server(datagram[8],buffer, SocketFD, sender);
         }else{
-            sv_UDP.Cases_Server(buffer[0],buffer, SocketFD, sender);
+            sv_UDP.Cases_Server(datagram[0],buffer, SocketFD, sender);
         }
         
     }
