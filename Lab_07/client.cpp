@@ -85,7 +85,7 @@ void read_thread_UDP(int SocketFD){
         if(n<=0){
             continue;
         }
-		clp_UDP.Cases_Client_UDP(buffer[0],SocketFD,sender);
+		clp_UDP.Cases_Client_UDP(buffer,SocketFD,sender);
     }
 }
 
