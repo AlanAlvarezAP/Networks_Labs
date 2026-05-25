@@ -48,8 +48,6 @@ void read_thread_UDP(int SocketFD){
 
         buffer[n] = '\0';
 
-        std::cout << "Readed: " << buffer << std::endl;
-
         sv_UDP.Cases_Server(buffer, SocketFD, sender);
     }
 }
