@@ -352,7 +352,8 @@ public:
         ofs.write(file.data(), file.size());
     }
 
-    void Cases_Client_UDP(char type, int client_socket, sockaddr_in& server_addr) {
+    void Cases_Client_UDP(const std::string& buffer, int client_socket, sockaddr_in& server_addr) {
+		char type=buffer[0];
         switch (type) {
             case 'L': {
                 Login(client_socket, server_addr);
