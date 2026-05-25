@@ -85,6 +85,11 @@ void read_thread_UDP(int SocketFD){
         if(n<=0){
             continue;
         }
+
+		buffer[n] = '\0';
+
+        std::cout << "[UDP RECEIVED] "<< buffer<< std::endl;
+		
 		clp_UDP.Cases_Client_UDP(buffer,SocketFD,sender);
     }
 }
@@ -117,8 +122,10 @@ int main(void){
  
     if(connection_type == TCP){
         connect(SocketFD, (const struct sockaddr *)&stSockAddr, sizeof(struct sockaddr_in));
+		clp_TCP.running = true;
         std::thread(read_thread_TCP,n,SocketFD).detach();    
     }else{
+		clp_UDP.running = true;
         std::thread(read_thread_UDP,SocketFD).detach();
     }
     
