@@ -500,7 +500,7 @@ public:
 			}
 			
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
-			//std::cout << packet << std::endl;
+			std::cout << packet << std::endl;
 			sf.packets[i] = packet;
 	        sendto(client_socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
 	    }
