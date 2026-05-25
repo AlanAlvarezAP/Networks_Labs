@@ -6,7 +6,7 @@ Server_Protocols sv;
 Server_Protocols_UDP sv_UDP;
 
 enum TypeConnection{
-    TCP,
+    TCP=1,
     UDP
 };
 
@@ -44,6 +44,7 @@ void read_thread_UDP(int SocketFD){
         if(n<=0){
             continue;
         }
+        std::cout << "En read se leeeee " << buffer << std::endl;
         sv_UDP.Cases_Server(buffer,SocketFD,sender);
     }
 }

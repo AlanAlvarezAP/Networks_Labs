@@ -34,7 +34,7 @@ std::string number_to_string_2(int number, int size) {
     return result;
 }
 
-void print(){
+void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
 	for(const auto& cliente : clientes){
 	    std::cout << "ID: " << cliente.first << std::endl;
 	}
@@ -49,17 +49,18 @@ public:
         int size_name = std::atoi(size_str.c_str());
         
         std::string nickname = buffer.substr(5, size_name);
-        
+        std::cout << "Entering with " << nickname << " and server socket " << server_socket << std::endl;
         if (client_map.find(nickname) != client_map.end()) {
             std::string error_msg = "ERROR nickname already in server";
             int size_error = error_msg.size();
             std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
             sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
         } else {
+            std::cout << "Hola papu" << std::endl;
             client_map[nickname] = client_addr;
             char k = 'K';
             sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
-			print();
+	        print(client_map);
         }
         
         return nickname;
@@ -181,7 +182,7 @@ public:
                 client_map.erase(it);
                 char k = 'K';
                 sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
-				print();
+		        print(client_map);
                 return;
             }
         }
@@ -194,7 +195,7 @@ public:
 
     void Cases_Server(const std::string& buffer, int server_socket, sockaddr_in& client_addr) {
         char type = buffer[0];
-        
+        std::cout << "El valor de buffer es " << buffer << " y el tipo es " << type << std::endl;
         switch (type) {
             case 'L': {
                 Login(buffer, server_socket, client_addr);

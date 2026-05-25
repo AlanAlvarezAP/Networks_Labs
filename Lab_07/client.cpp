@@ -6,7 +6,7 @@ Client_Protocols clp_TCP;
 Client_Protocols_UDP clp_UDP;
 
 enum TypeConnection{
-    TCP,
+    TCP=1,
     UDP
 };
 
