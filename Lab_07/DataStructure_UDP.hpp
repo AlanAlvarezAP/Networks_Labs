@@ -104,11 +104,9 @@ void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& serve
     if(it == sent_files.end()){
         return;
     }
-	std::cout<< "[ACK] seq=" << seq<< " current=" << current<< std::endl;
     SentFile& file = it->second;
 	waiting_ACK=false;
 	if(ack){
-		std::cout << "[CHECK] current=" << current << " acked.size=" << file.acked.size() << std::endl;
 		sent_files[seq].acked[current-1] = true;
 
         bool complete = true;
@@ -121,7 +119,6 @@ void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& serve
         }
 
         if(complete){
-			std::cout<< "[ERASE] seq=" << seq << std::endl;
             std::cout<< "Transfer "<< seq<< " completed"<< std::endl;
             global_seq+= file.file_size;
 			sent_files.erase(it);
@@ -282,12 +279,12 @@ public:
 		    content[5] = 'X';
 		    std::cout << "[Test] Corrupting packet" << std::endl;
 		}
-		static bool delay_once = true;
+		/*static bool delay_once = true;
 		if(delay_once){
 		    delay_once = false;
 		    std::cout << "[Test] Delaying ACK 2 seconds" << std::endl;
 		    std::this_thread::sleep_for(std::chrono::seconds(2));
-		}
+		}*/
 	    char received_checksum =buffer[pos];
 	    char calculated_checksum =Calculate_Checksum(content);
 	
@@ -508,7 +505,7 @@ public:
 	        sendto(client_socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
 	    }
 		sent_files[global_seq] = std::move(sf);
-		SentFile& current_file = sent_files[global_seq];
+		/*SentFile& current_file = sent_files[global_seq];
 		for(int i=0;i<total_fragments;i++){
 			std::cout << "[SEND] seq=" << global_seq << " i=" << i << " packets.size=" << current_file.packets.size() << std::endl;
 			
@@ -524,7 +521,7 @@ public:
 			        starting = std::chrono::steady_clock::now();
 			    }
 			}
-		}
+		}*/
 
 		
 	}
