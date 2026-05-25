@@ -141,7 +141,7 @@ int main(void){
         }
 
         if(connection_type == TCP){
-            clp_TCP.Cases_Client(std::string{option}, n,SocketFD);
+            clp_TCP.Cases_Client(option,n,SocketFD);
         }else{
             clp_UDP.Cases_Client_UDP(std::string{option},SocketFD,stSockAddr);
         }
