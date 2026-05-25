@@ -19,6 +19,25 @@
 
 typedef nlohmann::json json;
 
+int global_seq = 1;
+
+struct FileAssembly{
+    int total_fragments;
+
+    std::string file_name;
+    std::string origin;
+
+    std::vector<std::string> fragments;
+    std::vector<bool> received;
+};
+
+struct SentFile{
+    int total_fragments;
+	long long file_size;
+    std::vector<std::string> packets;
+    std::vector<bool> acked;
+};
+
 std::string number_to_string_2(int number, int size) {
     std::string result(size, ' ');
     int count = size - 1;
@@ -57,6 +76,60 @@ char Calculate_Checksum(std::string& content){
 	}
 
     return static_cast<char>(sum % 256);
+}
+
+std::string Create_ACKNACK(char type,int seq,int total,int current){
+    std::string packet;
+
+    packet += type;
+
+    packet += number_to_string_2(seq,4);
+    packet += number_to_string_2(total,2);
+    packet += number_to_string_2(current,2);
+
+    while(packet.size() < DATAGRAM_SIZE){
+        packet.push_back('#');
+    }
+
+    return packet;
+}
+
+void NACKACK_read(const std::string& buffer,int client_socket,sockaddr_in& server_addr,bool ack,std::unordered_map<int,SentFile> &sent_files){
+    int seq=std::atoi(buffer.substr(1,4).c_str());
+    int total=std::atoi(buffer.substr(5,2).c_str());
+    int current =std::atoi(buffer.substr(7,2).c_str());
+
+	auto it = sent_files.find(seq);
+    if(it == sent_files.end()){
+        return;
+    }
+
+    SentFile& file = it->second;
+	
+	if(ack){
+        sent_files[seq].acked[current-1] = true;
+
+        bool complete = true;
+        for(bool ok : sent_files[seq].acked){
+            if(!ok){
+                complete = false;
+                break;
+            }
+			std::cout << "Seq=" << seq << " fragment=" << current << "/" << total << std::endl;
+        }
+
+        if(complete){
+            std::cout<< "Transfer "<< seq<< " completed"<< std::endl;
+            global_seq+= file.file_size;
+			sent_files.erase(it);
+        }
+
+        return;
+    }
+
+    std::cout << "Retransmitting fragment " << current << std::endl;
+    sendto(client_socket,sent_files[seq].packets[current-1].data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
+    
 }
 
 void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
@@ -160,25 +233,66 @@ public:
     }
 
    void File_redirect(const std::string& buffer,int server_socket,sockaddr_in& client_addr){
-	    int pos=0;
-	    pos += 9;
-	    int size_dest=std::atoi(buffer.substr(pos,5).c_str());
-	    pos += 5;
-	   
-	    std::string destination=buffer.substr(pos,size_dest);
-	   
-	    if(client_map.find(destination)==client_map.end()){
-			std::string error_msg="ERROR destination not in the server for file";
-            int size_error=error_msg.size();
-            std::string final_msg="E" + number_to_string_2(size_error, 5) + error_msg;
-            sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
-            return;
+	    int pos = 0;
+	    int total_fragments =std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	    int current_fragment =std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	    int global_seq =std::atoi(buffer.substr(pos,4).c_str());
+	    pos += 4;
+	
+	    char protocol_type = buffer[pos++];
+	    if(protocol_type != 'F'){
+	        return;
 	    }
 	
-	    sockaddr_in dst =client_map[destination];
-	   	std::cout << "Server received file to -> " << size_dest << " to -> " << destination << " with the datagram format of" << std::endl;
-		std::cout << buffer << std::endl;
-	    sendto(server_socket,buffer.data(),500,0,(sockaddr*)&dst,sizeof(dst));
+	    int size_dest =std::atoi(buffer.substr(pos,5).c_str());
+	    pos += 5;
+	
+	    std::string destination =buffer.substr(pos,size_dest);
+	    pos += size_dest;
+	
+	    int size_file_name =std::atoi(buffer.substr(pos,3).c_str());
+	    pos += 3;
+	
+	    std::string file_name =buffer.substr(pos,size_file_name);
+	    pos += size_file_name;
+	
+	    int size_origin =std::atoi(buffer.substr(pos,5).c_str());
+	    pos += 5;
+	
+	    std::string origin =buffer.substr(pos,size_origin);
+	    pos += size_origin;
+	
+	    long long fragment_seq =std::atoll(buffer.substr(pos,12).c_str());
+	    pos += 12;
+	
+	    long long size_content=std::atoll(buffer.substr(pos,22).c_str());
+	    pos += 22;
+	
+	    std::string content=buffer.substr(pos,size_content);
+	    pos += size_content;
+	
+	    char received_checksum =buffer[pos];
+	    char calculated_checksum =Calculate_Checksum(content);
+	
+	    if(received_checksum != calculated_checksum){
+	        std::string nack=Create_ACKNACK('k',global_seq,total_fragments,current_fragment);
+	        sendto(server_socket,nack.data(),DATAGRAM_SIZE,0,(sockaddr*)&client_addr,sizeof(client_addr));
+	        return;
+	    }
+	
+	    std::string ack=Create_ACKNACK('K',global_seq,total_fragments,current_fragment);
+	    sendto(server_socket,ack.data(),DATAGRAM_SIZE,0,(sockaddr*)&client_addr,sizeof(client_addr));
+	
+	    if(client_map.find(destination) == client_map.end()){
+	        std::string error_msg ="ERROR destination not in the server for file";
+	        std::string final_msg ="E" +number_to_string_2(error_msg.size(),5) +error_msg;
+	        sendto(server_socket,final_msg.data(),final_msg.size(),0,(sockaddr*)&client_addr,sizeof(client_addr));
+	        return;
+	    }
+	    sockaddr_in dst = client_map[destination];
+	    sendto(server_socket,buffer.data(),DATAGRAM_SIZE,0,(sockaddr*)&dst,sizeof(dst));
 	}
 
     void Logout(int server_socket, sockaddr_in& client_addr) {
@@ -234,21 +348,11 @@ public:
     }
 };
 
-struct FileAssembly{
-    int total_fragments;
-
-    std::string file_name;
-    std::string origin;
-
-    std::vector<std::string> fragments;
-    std::vector<bool> received;
-};
-
 class Client_Protocols_UDP {
 public:
     bool logging_status = false, running = false;
-	int global_seq = 1;
 	std::unordered_map<int,FileAssembly> pending_files;
+	std::unordered_map<int,SentFile> sent_files;
 public:
     void Error(const std::string& buffer) {
         std::string size_str = buffer.substr(1, 5);
@@ -347,7 +451,13 @@ public:
 	    int max_content =Calculate_Max_Content(destination,file_name,origin);
 	
 	    int total_fragments =(complete_file.size() + max_content - 1)/ max_content;
-	
+
+		SentFile sf;
+		sf.total_fragments = total_fragments;
+		sf.file_size = complete_file.size();
+		sf.packets.resize(total_fragments);
+		sf.acked.resize(total_fragments,false);
+		
 	    for(int i=0;i<total_fragments;i++){
 	        int start =i*max_content;
 	
@@ -379,9 +489,10 @@ public:
 			
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
 			std::cout << packet << std::endl;
+			sf.packets[i] = packet;
 	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
 	    }
-	    global_seq++;
+		sent_files[global_seq] = std::move(sf);
 	}
 
     void File_read(const std::string& buffer){
@@ -424,23 +535,6 @@ public:
 	    std::string content=buffer.substr(pos,size_content);
 	    pos += size_content;
 	
-	    char received_checksum=static_cast<char>(buffer[pos]);
-	    int sum=0;
-	
-	    for(unsigned char c : content){
-	        sum += c;
-	    }
-	   	char calculated_checksum =static_cast<char>(sum % 256);
-
-		
-		
-	    if(received_checksum != calculated_checksum){
-			// TODO ADD THE NACK
-	        std::cout<< "Checksum error in fragment " << current_fragment<< " of file " << file_name<< std::endl;
-			std::cout << "CHECKSUM RECEIVED: " << (int)(unsigned char)received_checksum << std::endl;
-			std::cout << "CHECKSUM CALCULATED: " << (int)(unsigned char)calculated_checksum << std::endl;
-	        return;
-	    }
 	
 	    if(pending_files.find(global_seq)==pending_files.end()){
 	        FileAssembly assembly;
@@ -451,7 +545,7 @@ public:
 	        assembly.fragments.resize(total_fragments);
 	        assembly.received.resize(total_fragments,false);
 	
-	        pending_files[global_seq] =std::move(assembly);
+	        pending_files[global_seq]=std::move(assembly);
 	    }
 	
 	    FileAssembly& assembly=pending_files[global_seq];
@@ -520,15 +614,25 @@ public:
                 break;
             }
 			case 'K': {
-                std::cout << "All good OK " << std::endl;
-                if (logging_status == true) {
-                    logging_status = false;
-                    running = false;
-                } else {
-                    logging_status = true;
-                }
+				if(buffer.size()==1){
+					std::cout << "All good OK " << std::endl;
+	                if (logging_status == true) {
+	                    logging_status = false;
+	                    running = false;
+	                } else {
+	                    logging_status = true;
+	                }
+	                break;
+				}
+				std::cout << "[ACK] -> ";
+				NACKACK_read(buffer,client_socket,server_addr,true,sent_files);
                 break;
             }
+			case 'k':{
+				std::cout << "[NACK] -> ";
+				NACKACK_read(buffer,client_socket,server_addr,false,sent_files);
+				break;
+			}
             case 'E': {
                 Error(buffer);
                 break;
