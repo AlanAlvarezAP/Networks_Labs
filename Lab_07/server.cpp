@@ -35,17 +35,22 @@ void read_thread_TCP(int n,int SocketFD){
 }
 
 void read_thread_UDP(int SocketFD){
-    char buffer[500];
+    char buffer[501];
     sockaddr_in sender;
-    socklen_t len=sizeof(sender);
-    while(true){
-        int n=recvfrom(SocketFD,buffer,sizeof(buffer),0,(sockaddr*)&sender,&len);
+    socklen_t len = sizeof(sender);
 
-        if(n<=0){
+    while(true){
+        int n = recvfrom(SocketFD,buffer,sizeof(buffer)-1,0,(sockaddr*)&sender,&len);
+
+        if(n <= 0){
             continue;
         }
-        std::cout << "En read se leeeee " << buffer << std::endl;
-        sv_UDP.Cases_Server(buffer,SocketFD,sender);
+
+        buffer[n] = '\0';
+
+        std::cout << "Readed: " << buffer << std::endl;
+
+        sv_UDP.Cases_Server(buffer, SocketFD, sender);
     }
 }
 
@@ -90,9 +95,7 @@ int main(void){
             std::thread(read_thread_TCP,0,ClientFD).detach();
         }
     }else{
-        for(;;){
-            std::thread(read_thread_UDP,ClientFD).detach();
-        }
+        read_thread_UDP(ServerFD);
     }
  
     shutdown(ClientFD, SHUT_RDWR);
