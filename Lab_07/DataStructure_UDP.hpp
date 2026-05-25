@@ -508,9 +508,9 @@ public:
 	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
 			auto starting = std::chrono::steady_clock::now();
 		
-			while(waiting_ack){
+			while(waiting_ACK){
 			    auto now = std::chrono::steady_clock::now();
-			    auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(now-start).count();
+			    auto elapsed=std::chrono::duration_cast<std::chrono::milliseconds>(now-starting).count();
 			    if(elapsed > 1000){
 			        std::cout << "TIMEOUT -> retransmitting fragment " << i+1<< std::endl;
 					sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
