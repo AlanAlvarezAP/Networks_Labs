@@ -44,10 +44,7 @@ void read_thread_UDP(int SocketFD){
         if(n<=0){
             continue;
         }
-
-        /* Read the file content and used their respectives cases
-
-        */
+        sv_UDP.Cases_Server(buffer,SocketFD,sender);
     }
 }
 
