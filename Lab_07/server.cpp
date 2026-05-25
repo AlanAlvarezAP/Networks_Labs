@@ -40,7 +40,7 @@ void read_thread_UDP(int SocketFD){
     socklen_t len = sizeof(sender);
 
     while(true){
-        int n = recvfrom(SocketFD,buffer,sizeof(buffer)-1,0,(sockaddr*)&sender,&len);
+        int n = recvfrom(SocketFD,buffer,sizeof(buffer),0,(sockaddr*)&sender,&len);
 
         if(n <= 0){
             continue;
