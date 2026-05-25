@@ -194,8 +194,7 @@ public:
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
-    void Cases_Server(const std::string& buffer, int server_socket, sockaddr_in& client_addr) {
-        char type = buffer[0];
+    void Cases_Server(char type,const std::string& buffer, int server_socket, sockaddr_in& client_addr) {
         switch (type) {
             case 'L': {
                 Login(buffer, server_socket, client_addr);
@@ -361,8 +360,7 @@ public:
         ofs.write(file.data(), file.size());
     }
 
-    void Cases_Client_UDP(const std::string& buffer, int client_socket, sockaddr_in& server_addr) {
-		char type=buffer[0];
+    void Cases_Client_UDP(char type,const std::string& buffer, int client_socket, sockaddr_in& server_addr) {
         switch (type) {
             case 'L': {
                 Login(client_socket, server_addr);
