@@ -430,7 +430,10 @@ public:
 	        sum += c;
 	    }
 	    unsigned char calculated_checksum =static_cast<unsigned char>(sum % 256);
-	
+
+		std::cout << "CHECKSUM RECEIVED: " << (int)received_checksum << std::endl;
+		std::cout << "CHECKSUM CALCULATED: " << (int)received_checksum << std::endl;
+		
 	    if(received_checksum != calculated_checksum){
 			// TODO ADD THE NACK
 	        std::cout<< "Checksum error in fragment " << current_fragment<< " of file " << file_name<< std::endl;
