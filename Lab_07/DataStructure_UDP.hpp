@@ -155,7 +155,7 @@ public:
             std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
             sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
         } else {
-            std::cout << "Hola papu" << std::endl;
+            std::cout << "Hiiii" << std::endl;
             client_map[nickname] = client_addr;
             char k = 'K';
             sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
@@ -488,7 +488,7 @@ public:
 			}
 			
 			std::cout << "Sending from -> " << origin << " to " << destination << " with the datagram format of" << std::endl;
-			std::cout << packet << std::endl;
+			//std::cout << packet << std::endl;
 			sf.packets[i] = packet;
 	        sendto(client_socket,packet.data(),500,0,(sockaddr*)&server_addr,sizeof(server_addr));
 	    }
