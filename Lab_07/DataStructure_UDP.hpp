@@ -50,13 +50,13 @@ int Calculate_Max_Content(std::string& destination,std::string& file_name,std::s
     return DATAGRAM_SIZE - header_size;
 }
 
-uint8_t Calculate_Checksum(std::string& content){
-    uint32_t sum = 0;
-    for(uint8_t c : std::vector<uint8_t>(content.begin(),content.end())){
+char Calculate_Checksum(std::string& content){
+    int sum = 0;
+    for(unsigned char c : content){
         sum += c;
 	}
 
-    return static_cast<uint8_t>(sum % 256);
+    return static_cast<char>(sum % 256);
 }
 
 void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
@@ -354,7 +354,7 @@ public:
 	        int current_size =std::min(max_content,(int)complete_file.size()-start);
 	        std::string fragment =complete_file.substr(start,current_size);
 	
-	        uint8_t checksum =Calculate_Checksum(fragment);
+	        char checksum =Calculate_Checksum(fragment);
 	
 	        std::string packet;
 	
@@ -371,7 +371,7 @@ public:
 	        packet += number_to_string_2(i+1,12);
 	        packet += number_to_string_2(fragment.size(),22);
 	        packet += fragment;
-	        packet.push_back(static_cast<char>(checksum));
+	        packet.push_back(checksum);
 	
 	        while(packet.size() < 500){
 	            packet.push_back('#');
@@ -424,13 +424,13 @@ public:
 	    std::string content=buffer.substr(pos,size_content);
 	    pos += size_content;
 	
-	    uint8_t received_checksum=static_cast<uint8_t>(buffer[pos]);
-	    uint32_t sum=0;
+	    char received_checksum=static_cast<char>(buffer[pos]);
+	    int sum=0;
 	
-	    for(uint8_t c : std::vector<uint8_t>(content.begin(),content.end())){
+	    for(unsigned char c : content){
 	        sum += c;
 	    }
-	   	uint8_t calculated_checksum =static_cast<uint8_t>(sum % 256);
+	   	char calculated_checksum =static_cast<char>(sum % 256);
 
 		
 		
