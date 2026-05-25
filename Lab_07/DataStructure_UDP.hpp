@@ -35,9 +35,11 @@ std::string number_to_string_2(int number, int size) {
 }
 
 void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
+	std::cout << "================================" << std::endl;
 	for(const auto& cliente : clientes){
 	    std::cout << "ID: " << cliente.first << std::endl;
 	}
+	std::cout << "================================" << std::endl;
 }
 
 class Server_Protocols_UDP {
