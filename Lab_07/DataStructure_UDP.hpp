@@ -280,7 +280,12 @@ public:
 		    content[5] = 'X';
 		    std::cout << "[Test] Corrupting packet" << std::endl;
 		}
-			   
+		static bool delay_once = true;
+		if(delay_once){
+		    delay_once = false;
+		    std::cout << "[Test] Delaying ACK 2 seconds" << std::endl;
+		    std::this_thread::sleep_for(std::chrono::seconds(1));
+		}
 	    char received_checksum =buffer[pos];
 	    char calculated_checksum =Calculate_Checksum(content);
 	
@@ -319,12 +324,6 @@ public:
         std::string error_msg = "ERROR logout";
         int size_error = error_msg.size();
         std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
-		static bool delay_once = true;
-		if(delay_once){
-		    delay_once = false;
-		    std::cout << "[Test] Delaying ACK 2 seconds" << std::endl;
-		    std::this_thread::sleep_for(std::chrono::seconds(1));
-		}
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
