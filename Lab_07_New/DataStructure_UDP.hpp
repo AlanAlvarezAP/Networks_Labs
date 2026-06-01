@@ -314,7 +314,7 @@ public:
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
-   void File_redirect(const std::string& buffer,int server_socket,sockaddr_in& client_addr){
+   void File_redirect(std::string& buffer,int server_socket,sockaddr_in& client_addr){
 		std::string senderKey = GetSenderKey(client_addr);
 	   
 	    int pos = 0;
