@@ -51,6 +51,37 @@ std::string GetSenderKey(sockaddr_in& addr){
     return std::string(inet_ntoa(addr.sin_addr)) + ":" + std::to_string(ntohs(addr.sin_port));
 }
 
+void Send_OK(int socket,sockaddr_in& addr){
+    ProtocolFormat p{'0',11,0,'K',0,"",0,"",0,"",0,"",0,""};
+
+    std::string packet = p.ConstructDatagram();
+
+    while(packet.size() < DATAGRAM_SIZE)
+        packet.push_back('#');
+
+    packet[0] = p.Calculate_Checksum_Fragments(packet);
+
+    sendto(socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&addr,sizeof(addr));
+}
+
+void Send_Error(int socket,sockaddr_in& addr,const std::string& msg){
+    ProtocolFormat p{'0',11,0,'E',0,"",0,"",(int)msg.size(),msg,0,"",0,""};
+
+    std::string packet = p.ConstructDatagram();
+
+    while(packet.size() < DATAGRAM_SIZE)
+        packet.push_back('#');
+
+    packet[0] = p.Calculate_Checksum_Fragments(packet);
+
+    sendto(socket,
+           packet.data(),
+           DATAGRAM_SIZE,
+           0,
+           (sockaddr*)&addr,
+           sizeof(addr));
+}
+
 struct SentFile{
     int total_fragments;
 	long long file_size;
@@ -136,7 +167,7 @@ public:
 
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
-	        std::string error_msg = "ERROR CHECKSUM";
+			Send_Error(server_socket,client_addr,error_msg);
 	        return "";
 	    }
 	   
@@ -157,10 +188,7 @@ public:
 		    pos += size_origin;
 			
 			if (client_map.find(origin) != client_map.end()) {
-	            std::string error_msg = "ERROR nickname already in server";
-	            int size_error = error_msg.size();
-	            std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
-	            sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
+				Send_Error(server_socket,client_addr,"ERROR nickname already in server");
 				return origin;
 	        }
 		   	pos += 3;
@@ -183,6 +211,7 @@ public:
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
 		   	std::string error_msg ="ERROR: no transfer state for"+std::string{senderKey};
+		   	Send_Error(server_socket,client_addr,error_msg);
 	        return "";
 	    }
 
@@ -210,6 +239,7 @@ public:
 		    }
 		    pending_transfers.erase(senderKey);
 			client_map[nickname] = client_addr;
+
             /*char k = 'K';
             sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));*/
 	        print(client_map);
@@ -299,8 +329,7 @@ public:
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
-	        std::string final_msg = "E" + number_to_string_2(error_msg.size(), 5) + error_msg;
-	        sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
+			Send_Error(server_socket,client_addr,error_msg);
 	        return;
 	    }
 	   
@@ -328,8 +357,7 @@ public:
 
 			if(client_map.find(destination) == client_map.end()){
 		        std::string error_msg ="ERROR destination not in the server for file";
-		        std::string final_msg ="E" +number_to_string_2(error_msg.size(),5) +error_msg;
-		        sendto(server_socket,final_msg.data(),final_msg.size(),0,(sockaddr*)&client_addr,sizeof(client_addr));
+		        Send_Error(server_socket,client_addr,error_msg);
 		        return;
 		    }
 			
@@ -359,8 +387,7 @@ public:
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
 		   	std::string error_msg ="ERROR: no transfer state for"+std::string{senderKey};
-	        std::string final_msg ="E" +number_to_string_2(error_msg.size(),5) +error_msg;
-	        sendto(server_socket,final_msg.data(),final_msg.size(),0,(sockaddr*)&client_addr,sizeof(client_addr));
+	        Send_Error(server_socket,client_addr,error_msg);
 	        return;
 	    }
 
@@ -668,6 +695,7 @@ public:
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
+			Send_Error(server_socket,client_addr,error_msg);
 	        return;
 	    }
 	   
@@ -722,6 +750,7 @@ public:
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
 		   	std::string error_msg ="ERROR: no transfer state for"+std::string{senderKey};
+		   	Send_Error(server_socket,client_addr,error_msg);
 	        return;
 	    }
 
