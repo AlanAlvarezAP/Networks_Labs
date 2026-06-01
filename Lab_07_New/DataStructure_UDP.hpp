@@ -412,6 +412,7 @@ public:
 		    sockaddr_in dst = client_map[transfer.destination];
 		    for(auto& pares : transfer.fragments){
 		        sendto(server_socket, pares.second.data(), DATAGRAM_SIZE, 0, (sockaddr*)&dst, sizeof(dst));
+				std::this_thread::sleep_for(std::chrono::microseconds(100));
 		    }
 		    pending_transfers.erase(senderKey);
 		}
