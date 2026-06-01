@@ -334,6 +334,10 @@ public:
 			Send_Error(server_socket,client_addr,error_msg);
 	        return;
 	    }
+
+		copy[7]='f';
+		char calculated = Calculate_Checksum(copy.substr(7, DATAGRAM_SIZE - 7));
+	   	copy[0]=calculated;
 	   
 	   	int size_origin,size_dest,size_msg;
 	    long long size_file_name,size_content;
@@ -385,7 +389,7 @@ public:
 			pending_transfers[senderKey].action = 'F';
 			pending_transfers[senderKey].origin=origin;
         	pending_transfers[senderKey].fragments.clear();
-			copy[7]='f';
+			
 		}
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
