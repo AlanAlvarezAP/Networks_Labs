@@ -488,7 +488,7 @@ public:
 		int start = current_size;
 	    for(int i=1;i<total_fragments;i++){
 	        int frag_size =std::min(max_content,(int)pending_name.size()-start);
-	        std::string fragment =complete_file.substr(start,frag_size);
+	        std::string fragment =pending_name.substr(start,frag_size);
 
 			int frag_order = (i == total_fragments - 1) ? 11 : 0;
 			ProtocolFormat_Normal protocol_normal{'0',frag_order,seq_numbers++,fragment};
