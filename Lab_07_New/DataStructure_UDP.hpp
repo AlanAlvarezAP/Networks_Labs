@@ -1406,8 +1406,14 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
                 break;
             }
             case 'T': {
-                char T = 'T';
-                sendto(client_socket, &T, 1, 0, (sockaddr*)&server_addr, sizeof(server_addr));
+                ProtocolFormat protocol{'0',11,0,'T',(int)final_name.size(),final_name,0,"",0,"",0,"",0,""};
+			
+			    std::string packet = protocol.ConstructDatagram();
+			    while(packet.size() < DATAGRAM_SIZE){
+			        packet.push_back('#');
+			    }
+			    packet[0] = protocol.Calculate_Checksum_Fragments(packet);
+			    sendto(client_socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
                 break;
             }
             case 'F': {
