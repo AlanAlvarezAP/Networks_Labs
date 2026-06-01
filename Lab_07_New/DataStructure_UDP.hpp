@@ -327,8 +327,8 @@ public:
 
 	   	std::string copy=buffer;
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
-		std::cout << "HASH RECIBIDO = " << (int)hash << std::endl;
-		std::cout << "HASH CALCULADO = " << (int)calculated << std::endl;
+		/*std::cout << "RECEIVE HASH = " << (int)hash << std::endl;
+		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;*/
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
 			Send_Error(server_socket,client_addr,error_msg);
@@ -416,16 +416,7 @@ public:
 		    }
 		    pending_transfers.erase(senderKey);
 		}
-	   	static int contador = 0;
 
-		contador++;
-		
-		std::cout
-		<< "PAQUETE RECIBIDO #"
-		<< contador
-		<< " SEQ="
-		<< seq_number
-		<< std::endl;
 	}
 
     void Logout(int server_socket, sockaddr_in& client_addr) {
@@ -799,16 +790,7 @@ public:
 			transfer.last_seq = seq_number;
     		transfer.last_received = true;
 		}
-		static int contador = 0;
 
-		contador++;
-		
-		std::cout
-		<< "PAQUETE RECIBIDO #"
-		<< contador
-		<< " SEQ="
-		<< seq_number
-		<< std::endl;
 	    if(transfer.last_received && (int)transfer.fragments.size() == transfer.last_seq + 1){
 			std::sort(transfer.fragments.begin(), transfer.fragments.end(), [](const auto& a, const auto& b){return a.first < b.first;});
 
