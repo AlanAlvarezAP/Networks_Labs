@@ -105,6 +105,7 @@ struct TransferState {
 	long long total_size   = 0;
 	int last_seq = -1;
     bool last_received = false;
+	char action = 0;
     std::vector<std::pair<int,std::string>> fragments;
 };
 
@@ -277,6 +278,7 @@ public:
 
 			pending_transfers[senderKey].destination = destination;
 			pending_transfers[senderKey].file_name = file_name;
+			pending_transfers[senderKey].action = 'F';
 			pending_transfers[senderKey].origin=origin;
         	pending_transfers[senderKey].fragments.clear();
 		}
