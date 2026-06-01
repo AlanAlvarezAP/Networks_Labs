@@ -713,8 +713,8 @@ public:
 	    pos += 4;
 
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
-		std::cout << "HASH RECIBIDO = " << (int)hash << std::endl;
-		std::cout << "HASH CALCULADO = " << (int)calculated << std::endl;
+		/*std::cout << "RECEIVED HASH = " << (int)hash << std::endl;
+		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;*/
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
 			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
