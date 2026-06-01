@@ -31,6 +31,8 @@ void read_thread_UDP(int SocketFD){
                     continue;
                 }
                 action = it->second.action;
+            }else{
+                action='L';
             }
             
         }
