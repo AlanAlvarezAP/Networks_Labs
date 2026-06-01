@@ -314,7 +314,7 @@ public:
         sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
     }
 
-   void File_redirect(std::string& buffer,int server_socket,sockaddr_in& client_addr){
+   void File_redirect(const std::string& buffer,int server_socket,sockaddr_in& client_addr){
 		std::string senderKey = GetSenderKey(client_addr);
 	   
 	    int pos = 0;
@@ -325,6 +325,7 @@ public:
 	    int seq_number =std::atoi(buffer.substr(pos,4).c_str());
 	    pos += 4;
 
+	   	std::string copy=buffer;
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
@@ -382,7 +383,7 @@ public:
 			pending_transfers[senderKey].action = 'F';
 			pending_transfers[senderKey].origin=origin;
         	pending_transfers[senderKey].fragments.clear();
-			buffer[7]='f';
+			copy[7]='f';
 		}
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
@@ -393,7 +394,7 @@ public:
 
 	   	pending_transfers[senderKey].fragments.push_back({seq_number, buffer});
 	   	std::cout << "===================================================================" << std::endl;
-	   	std::cout << "Server received datagram # " << seq_number << " with the content" << buffer << std::endl;
+	   	std::cout << "Server received datagram # " << seq_number << " with the content" << copy << std::endl;
 	   	std::cout << "===================================================================" << std::endl;
 	   auto& transfer = pending_transfers[senderKey];
 	   	if (order == 11){
