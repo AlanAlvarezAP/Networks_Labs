@@ -635,24 +635,55 @@ public:
 
 	}
 
-    void Logout(int server_socket, sockaddr_in& client_addr) {
-        std::string author;
-        for (auto it = client_map.begin(); it != client_map.end(); ++it) {
-            if (it->second.sin_addr.s_addr == client_addr.sin_addr.s_addr && it->second.sin_port == client_addr.sin_port) {
-                author = it->first;
-                client_map.erase(it);
-                char k = 'K';
-                sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
-		        print(client_map);
-                return;
-            }
-        }
-        
-        std::string error_msg = "ERROR logout";
-        int size_error = error_msg.size();
-        std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
-        sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
-    }
+    void Logout(const std::string& buffer,int server_socket,sockaddr_in& client_addr){
+	    int pos = 0;
+	    char hash = buffer[0];
+	    pos += 1;
+	    int order = std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	    int seq_number = std::atoi(buffer.substr(pos,4).c_str());
+	    pos += 4;
+	    char calculated =Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
+	
+	    if(hash != calculated){
+	        Send_Error(server_socket,client_addr,"ERROR CHECKSUM");
+	        return;
+	    }
+	
+	    if(!(order == 11 && seq_number == 0)){
+	        Send_Error(server_socket,client_addr,"ERROR INVALID LOGOUT FORMAT");
+	        return;
+	    }
+	
+	    char protocol_type = buffer[pos++];
+	    if(protocol_type != 'O'){
+	        Send_Error(server_socket,client_addr,"ERROR INVALID LOGOUT TYPE");
+	        return;
+	    }
+	    std::string nickname;
+	    int nickname_size =std::atoi(buffer.substr(pos,3).c_str());
+	    pos += 3;
+	
+	    nickname =buffer.substr(pos,nickname_size);
+	    pos += nickname_size;
+	    bool found = false;
+	
+	    for(auto it = client_map.begin();it != client_map.end();++it){
+	        if(it->second.sin_addr.s_addr ==client_addr.sin_addr.s_addr &&it->second.sin_port ==client_addr.sin_port){
+	            found = true;
+	            std::cout<< "User disconnected -> "<< it->first<< std::endl;
+	            client_map.erase(it);
+	            break;
+	        }
+	    }
+	
+	    if(!found){
+	        Send_Error(server_socket,client_addr,"ERROR USER NOT LOGGED");
+	        return;
+	    }
+	    Send_OK(server_socket, client_addr);
+	    print(client_map);
+	}
 
     void Cases_Server(char type,const std::string& buffer, int server_socket, sockaddr_in& client_addr) {
         switch (type) {
@@ -661,7 +692,7 @@ public:
                 break;
             }
             case 'O': {
-                Logout(server_socket, client_addr);
+                Logout(buffer,server_socket, client_addr);
                 break;
             }
             case 'B': {
@@ -1391,11 +1422,18 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
                 break;
             }
             case 'O': {
-                char O = 'O';
                 logging_status = false;
                 running = false;
-                sendto(client_socket, &O, 1, 0, (sockaddr*)&server_addr, sizeof(server_addr));
-                break;
+                ProtocolFormat protocol{'0',11,0,'O',(int)final_name.size(),final_name,0,"",0,"",0,"",0,""};
+			    std::string packet = protocol.ConstructDatagram();
+			
+			    while(packet.size() < DATAGRAM_SIZE){
+			        packet.push_back('#');
+			    }
+			
+			    packet[0] = protocol.Calculate_Checksum_Fragments(packet);
+			    sendto(client_socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
+			    break;
             }
             case 'B': {
                 Broadcast(client_socket, server_addr);
