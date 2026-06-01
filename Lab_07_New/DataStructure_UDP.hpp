@@ -356,37 +356,106 @@ public:
 	}
 
     void Unicast(const std::string& buffer, int server_socket, sockaddr_in& client_addr) {
-        std::string size_str = buffer.substr(1, 5);
-        int size_msg = std::atoi(size_str.c_str());
-        
-        std::string msg = buffer.substr(6, size_msg);
-        
-        size_str = buffer.substr(6 + size_msg, 7);
-        int size_dst = std::atoi(size_str.c_str());
-        
-        std::string destination = buffer.substr(6 + size_msg + 7, size_dst);
+		std::string senderKey = GetSenderKey(client_addr);
+	
+	    int pos = 0;
+	
+	    char hash = buffer[0];
+	    pos += 1;
+	
+	    int order = std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	
+	    int seq_number = std::atoi(buffer.substr(pos,4).c_str());
+	    pos += 4;
+	
+	    std::string copy = buffer;
+	
+	    char calculated =
+	        Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
+	
+	    if(hash != calculated){
+	        Send_Error(server_socket,client_addr,"ERROR CHECKSUM");
+	        return;
+	    }
+	    std::string content;
+	
+	    if(order == 1 || (order == 11 && seq_number == 0))
+	    {
+	        char protocol_type = buffer[pos++];
+	
+	        if(protocol_type != 'U'){
+	            return;
+			}
+	
+	        copy[7] = 'u';
+	
+	        calculated =Calculate_Checksum(copy.substr(7,DATAGRAM_SIZE-7));
+	
+	        copy[0] = calculated;
+	
+	        int size_origin = std::atoi(buffer.substr(pos,3).c_str());
+	        pos += 3;
+	
+	        std::string origin =buffer.substr(pos,size_origin);
+	        pos += size_origin;
+	
+	        int size_dest = std::atoi(buffer.substr(pos,3).c_str());
+	        pos += 3;
 
-        if (client_map.find(destination) == client_map.end()) {
-            std::string error_msg = "ERROR destination not in the server";
-            int size_error = error_msg.size();
-            std::string final_msg = "E" + number_to_string_2(size_error, 5) + error_msg;
-            sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
-            return;
-        }
-        
-        std::string author;
-        for (const auto& pair : client_map) {
-            if (pair.second.sin_addr.s_addr == client_addr.sin_addr.s_addr && pair.second.sin_port == client_addr.sin_port) {
-                author = pair.first;
-                break;
-            }
-        }
-        
-        int size_auth = author.size();
-        sockaddr_in dst_addr = client_map.find(destination)->second;
-        
-        std::string final_msg = "u" + number_to_string_2(size_auth, 7) + author + number_to_string_2(size_msg, 5) + msg;
-        sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&dst_addr, sizeof(dst_addr));
+			std::string destination =buffer.substr(pos,size_dest);
+	        pos += size_dest;
+	
+	        int size_msg = std::atoi(buffer.substr(pos,5).c_str());
+	        pos += 5;
+	
+	        pos += size_msg;
+	
+	        long long size_file =std::atoll(buffer.substr(pos,11).c_str());
+	
+	        pos += 11;
+	
+	        pos += size_file;
+	
+	        long long size_content =std::atoll(buffer.substr(pos,20).c_str());
+	
+	        pos += 20;
+	
+	        content=buffer.substr(pos,size_content);
+	
+	        pending_transfers[senderKey].action = 'U';
+	        pending_transfers[senderKey].origin = origin;
+	        pending_transfers[senderKey].fragments.clear();
+	    }
+	
+	    if(pending_transfers.find(senderKey)== pending_transfers.end()){
+	        Send_Error(server_socket,client_addr,"ERROR no transfer state");
+	        return;
+	    }
+	
+	    pending_transfers[senderKey].fragments.push_back({seq_number,copy});
+		std::cout << "===================================================================" << std::endl;
+	   	std::cout << "Server received datagram # " << seq_number << " with the content | " << buffer << std::endl;
+	   	std::cout << "===================================================================" << std::endl;
+
+		
+	    auto& transfer=pending_transfers[senderKey];
+	
+	    if(order == 11){
+	        transfer.last_seq = seq_number;
+	        transfer.last_received = true;
+	    }
+	
+	    if(transfer.last_received && (int)transfer.fragments.size()== transfer.last_seq + 1){
+	        std::sort(transfer.fragments.begin(),transfer.fragments.end(),[](const auto& a,const auto& b){return a.first < b.first;});
+			sockaddr_in dst =client_map[transfer.destination];
+			for(const auto& fragment :transfer.fragments){
+	                sendto(server_socket,fragment.second.data(),DATAGRAM_SIZE,0,(sockaddr*)&dst,sizeof(dst));
+	                std::this_thread::sleep_for(std::chrono::microseconds(100));
+	            }
+	
+	        pending_transfers.erase(senderKey);
+	    }
     }
 
     void Send_List(int server_socket, sockaddr_in& client_addr) {
@@ -823,23 +892,162 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
         std::cout << "Give me the destination " << std::endl;
         std::getline(std::cin, nickname_dest);
         int size_dst = nickname_dest.size();
-        std::string final_msg = "U" + number_to_string_2(size_msg, 5) + msg + number_to_string_2(size_dst, 7) + nickname_dest;
-        
-        sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
+		
+		int seq_numbers{0};
+	
+	    // First fragment
+		int header=7+1+3+final_name.size()+3+size_dst+5+size_msg+11+0+20+0;
+		int remaining_size_first=DATAGRAM_SIZE-header;
+		int current_size =std::min(remaining_size_first,size_msg);
+
+	    int total_remaining = size_msg - current_size;
+	    int max_content = DATAGRAM_SIZE - 7;
+	    int extra_fragments = (total_remaining + max_content - 1) / max_content;
+	    int total_fragments = 1 + extra_fragments;
+	
+	    int first_order = (total_fragments == 1) ? 11 : 1;
+		
+		ProtocolFormat protocol{'0',first_order,seq_numbers++,'U',(int)final_name.size(),final_name,size_dst,nickname_dst,size_msg,msg,0,"",0,""};
+		
+		std::string packet=protocol.ConstructDatagram();
+		
+		while(packet.size() < DATAGRAM_SIZE){
+			packet.push_back('#');
+		}
+		packet[0]=protocol.hash=protocol.Calculate_Checksum_Fragments(packet);
+
+		SentFile sf;
+		sf.total_fragments = total_fragments;
+		sf.file_size = size_msg;
+		sf.packets.resize(total_fragments);
+		sf.acked.resize(total_fragments,false);
+
+		std::cout << "=======================================================" << std::endl;
+		std::cout << "Client Sending from -> " << protocol.nickname << " to " << protocol.destination << " with the datagram format of" << std::endl;
+		std::cout << packet << std::endl;
+		std::cout << "=======================================================" << std::endl;
+		
+		sf.packets[0] = packet;
+		sendto(client_socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
+
+		int start = current_size;
+	    for(int i=1;i<total_fragments;i++){
+	        int frag_size =std::min(max_content,size_msg-start);
+	        std::string fragment =msg.substr(start,frag_size);
+
+			int frag_order = (i == total_fragments - 1) ? 11 : 0;
+			ProtocolFormat_Normal protocol_normal{'0',frag_order,seq_numbers++,fragment};
+			
+			std::string packet_2=protocol_normal.ConstructDatagram();
+			while((int)packet_2.size() < 500){
+				packet_2.push_back('#');
+			}
+			
+	        packet_2[0]=protocol_normal.hash=protocol_normal.Calculate_Checksum_Fragments(packet_2);
+
+			std::cout << "=======================================================" << std::endl;
+			std::cout << "Client Sending ----> Fragment #" << i << " | " << packet_2 << std::endl;
+			std::cout << "=======================================================" << std::endl;
+			sf.packets[i] = packet_2;
+	        sendto(client_socket,packet_2.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
+
+			start += frag_size;
+	    }
+		
     }
 
     void Unicast_react(const std::string& buffer) {
-        std::string size_str = buffer.substr(1, 7);
-        int size_origin = std::atoi(size_str.c_str());
-        
-        std::string origin = buffer.substr(8, size_origin);
-        
-        size_str = buffer.substr(8 + size_origin, 5);
-        int size_msg = std::atoi(size_str.c_str());
-        
-        std::string msg = buffer.substr(8 + size_origin + 5, size_msg);
-        
-        std::cout << "Message from: " << origin << " with a message of -> " << msg << std::endl;
+		std::string senderKey = GetSenderKey(server_addr);
+	    int pos = 0;
+	
+	    char hash = buffer[0];
+	    pos += 1;
+	
+	    int order = std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	
+	    int seq_number = std::atoi(buffer.substr(pos,4).c_str());
+	    pos += 4;
+	
+	    char calculated =Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
+	
+	    if(hash != calculated){
+	        std::string error_msg= "ERROR CHECKSUM";
+			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
+			std::string packet=protocol.ConstructDatagram();
+			Error(packet);
+	        return;
+	    }
+	
+	    std::string content;
+	
+	    if(order == 1 || (order == 11 && seq_number == 0)){
+	        char protocol_type = buffer[pos++];
+	
+	        if(protocol_type != 'b')
+	            return;
+	
+	        int size_origin =std::atoi(buffer.substr(pos,3).c_str());
+	
+	        pos += 3;
+	
+	        std::string origin =buffer.substr(pos,size_origin);
+	
+	        pos += size_origin;
+	
+	        pos += 3;
+	        pos += 0;
+	
+	        int size_msg =std::atoi(buffer.substr(pos,5).c_str());
+	        pos += 5;
+	
+	        std::string msg = buffer.substr(pos,size_msg);
+	
+	        pos += size_msg;
+	
+	        pos += 11;
+	        pos += 20;
+	
+	        pending_transfers[senderKey].origin = origin;
+	        pending_transfers[senderKey].total_size = size_msg;
+	        pending_transfers[senderKey].action = 'b';
+	        pending_transfers[senderKey].fragments.clear();
+	
+	        content = msg;
+	    }
+	    else{
+	        content = buffer.substr(7,DATAGRAM_SIZE-7);
+	    }
+	
+	    auto& transfer = pending_transfers[senderKey];
+	
+	    transfer.fragments.push_back({seq_number,content});
+		std::cout << "===================================================================" << std::endl;
+	   	std::cout << "Client Unicast Destination received datagram # " << seq_number << " with the content | " << buffer << std::endl;
+	   	std::cout << "===================================================================" << std::endl;
+	    if(order == 11){
+	        transfer.last_seq = seq_number;
+	        transfer.last_received = true;
+	    }
+	
+	    if(transfer.last_received && (int)transfer.fragments.size()== transfer.last_seq + 1){
+	        std::sort(transfer.fragments.begin(),transfer.fragments.end(),[](const auto& a,const auto& b){return a.first < b.first;});
+	        std::string final_msg;
+	
+	        long long written = 0;
+	
+	        for(auto& frag : transfer.fragments){
+	            long long remaining =transfer.total_size - written;
+	
+	            long long to_copy = std::min((long long)frag.second.size(),remaining);
+	
+	            final_msg.append(frag.second.data(),to_copy);
+	            written += to_copy;
+	        }
+	
+	        std::cout << "Message Unicast from: " << transfer.origin << " with a message of -> " << final_msg<< std::endl;
+	        pending_transfers.erase(senderKey);
+	    }
     }
 
     void JSON_react(const std::string& buffer) {
