@@ -155,7 +155,7 @@ public:
 		
 		    origin=buffer.substr(pos,size_origin);
 		    pos += size_origin;
-
+			
 			if (client_map.find(origin) != client_map.end()) {
 	            std::string error_msg = "ERROR nickname already in server";
 	            int size_error = error_msg.size();
@@ -163,7 +163,16 @@ public:
 	            sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
 				return origin;
 	        }
+		   	pos += 3;
+			pos += 5;
+		    pos += 11;
 		
+		    size_content=std::atoll(buffer.substr(pos,20).c_str());
+		    pos += 20;
+		
+		    content=buffer.substr(pos,size_content);
+		    pos += size_content;
+			
 			pending_transfers[senderKey].total_size= size_origin;
 			pending_transfers[senderKey].action = 'L';
 			pending_transfers[senderKey].origin=origin;
