@@ -652,7 +652,7 @@ public:
 			packet.push_back('#');
 		}
 		packet[0]=protocol.hash=protocol.Calculate_Checksum_Fragments(packet);
-		std::cout << protocol.hash << " - " << packet[0] << std::endl;
+		std::cout << (int)protocol.hash << " - " << (int)packet[0] << std::endl;
 		SentFile sf;
 		sf.total_fragments = total_fragments;
 		sf.file_size = complete_file.size();
@@ -681,7 +681,7 @@ public:
 			}
 			
 	        packet_2[0]=protocol_normal.hash=protocol_normal.Calculate_Checksum_Fragments(packet_2);
-
+			std::cout << (int)protocol_normal.hash << " - " << (int)packet_2[0] << std::endl;
 			std::cout << "=======================================================" << std::endl;
 			std::cout << "Client Sending ----> Fragment #" << i+1 << " | " << packet_2 << std::endl;
 			std::cout << "=======================================================" << std::endl;
