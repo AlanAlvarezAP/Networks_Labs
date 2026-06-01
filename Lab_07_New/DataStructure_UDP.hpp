@@ -733,7 +733,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    char calculated =Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
 	
 	    if(hash != calculated){
-	        std::string= "ERROR CHECKSUM";
+	        std::string error_msg= "ERROR CHECKSUM";
 			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
 			std::string packet=protocol.ConstructDatagram();
 			Error(packet);
