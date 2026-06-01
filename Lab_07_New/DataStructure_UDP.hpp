@@ -506,7 +506,7 @@ public:
 				packet_2.push_back('#');
 			}
 			
-	        packet_2[0]=protocol_normal.hash=Calculate_Checksum_Fragments(packet_2);
+	        packet_2[0]=protocol_normal.hash=protocol_normal.Calculate_Checksum_Fragments(packet_2);
 
 			std::cout << "=======================================================" << std::endl;
 			std::cout << "Client Sending ----> Fragment #" << i+1 << " | " << packet_2 << std::endl;
