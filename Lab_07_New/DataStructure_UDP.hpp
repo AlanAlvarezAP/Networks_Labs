@@ -414,7 +414,16 @@ public:
 		    }
 		    pending_transfers.erase(senderKey);
 		}
-	   	std::cout << "Recibidos = " << transfer.fragments.size() << " Esperados = " << transfer.last_seq + 1 << std::endl;
+	   	static int contador = 0;
+
+		contador++;
+		
+		std::cout
+		<< "PAQUETE RECIBIDO #"
+		<< contador
+		<< " SEQ="
+		<< seq_number
+		<< std::endl;
 	}
 
     void Logout(int server_socket, sockaddr_in& client_addr) {
@@ -788,7 +797,16 @@ public:
 			transfer.last_seq = seq_number;
     		transfer.last_received = true;
 		}
-		std::cout << "Recibidos = " << transfer.fragments.size() << " Esperados = " << transfer.last_seq + 1 << std::endl;
+		static int contador = 0;
+
+		contador++;
+		
+		std::cout
+		<< "PAQUETE RECIBIDO #"
+		<< contador
+		<< " SEQ="
+		<< seq_number
+		<< std::endl;
 	    if(transfer.last_received && (int)transfer.fragments.size() == transfer.last_seq + 1){
 			std::sort(transfer.fragments.begin(), transfer.fragments.end(), [](const auto& a, const auto& b){return a.first < b.first;});
 
