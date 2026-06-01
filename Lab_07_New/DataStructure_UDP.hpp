@@ -414,6 +414,7 @@ public:
 		    }
 		    pending_transfers.erase(senderKey);
 		}
+	   	std::cout << "Recibidos = " << transfer.fragments.size() << " Esperados = " << transfer.last_seq + 1 << std::endl;
 	}
 
     void Logout(int server_socket, sockaddr_in& client_addr) {
