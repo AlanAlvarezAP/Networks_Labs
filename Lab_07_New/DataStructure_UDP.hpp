@@ -470,11 +470,22 @@ public:
 	std::unordered_map<std::string, TransferState> pending_transfers;
 public:
     void Error(const std::string& buffer) {
-        std::string size_str = buffer.substr(1, 5);
-        int size_msg = std::atoi(size_str.c_str());
-        
-        std::string error_msg = buffer.substr(6, size_msg);
-        std::cout << "ERROR -> " << error_msg << std::endl;
+        int pos = 8;
+	    int nickname_size =std::atoi(buffer.substr(pos,3).c_str());
+	    pos += 3;
+	
+	    pos += nickname_size;
+	
+	    int destination_size = std::atoi(buffer.substr(pos,3).c_str());
+	    pos += 3;
+	    pos += destination_size;
+	
+	    int msg_size =std::atoi(buffer.substr(pos,5).c_str());
+	    pos += 5;
+	
+	    std::string error_msg =buffer.substr(pos,msg_size);
+	
+	    std::cout<< "ERROR -> "<< error_msg<< std::endl;
     }
 
     void Login(int client_socket, sockaddr_in& server_addr) {
@@ -815,17 +826,16 @@ public:
                 break;
             }
 			case 'K': {
-				if(buffer.size()==1){
-					std::cout << "All good OK " << std::endl;
-	                if (logging_status == true) {
-	                    logging_status = false;
-	                    running = false;
-	                } else {
-	                    logging_status = true;
-						final_name=pending_name;
-	                }
-	                break;
-				}
+				std::cout << "All good OK" << std::endl;
+
+			    if (logging_status == true) {
+			        logging_status = false;
+			        running = false;
+			    }
+			    else {
+			        logging_status = true;
+			        final_name = pending_name;
+			    }
                 break;
             }
             case 'E': {
