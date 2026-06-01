@@ -787,6 +787,7 @@ public:
 			transfer.last_seq = seq_number;
     		transfer.last_received = true;
 		}
+		std::cout << "Recibidos = " << transfer.fragments.size() << " Esperados = " << transfer.last_seq + 1 << std::endl;
 	    if(transfer.last_received && (int)transfer.fragments.size() == transfer.last_seq + 1){
 			std::sort(transfer.fragments.begin(), transfer.fragments.end(), [](const auto& a, const auto& b){return a.first < b.first;});
 
