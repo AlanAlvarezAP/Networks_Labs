@@ -38,13 +38,13 @@ std::string number_to_string_2(int number, int size) {
     return result;
 }
 
-char Calculate_Checksum(std::string& content){
+char Calculate_Checksum(std::string content){
     int sum = 0;
     for(unsigned char c : content){
         sum += c;
 	}
 
-    return static_cast<char>(sum % 256);
+    return static_cast<char>(sum % 7);
 }
 
 std::string GetSenderKey(sockaddr_in& addr){
