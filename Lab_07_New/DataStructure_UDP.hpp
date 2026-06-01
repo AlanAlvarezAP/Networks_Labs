@@ -923,7 +923,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 		sf.acked.resize(total_fragments,false);
 
 		std::cout << "=======================================================" << std::endl;
-		std::cout << "Client Sending from -> " << protocol.nickname << " to " << protocol.destination << " with the datagram format of" << std::endl;
+		std::cout << "Client Sending from -> " << protocol.nickname << " to " << protocol.nickname_dest << " with the datagram format of" << std::endl;
 		std::cout << packet << std::endl;
 		std::cout << "=======================================================" << std::endl;
 		
