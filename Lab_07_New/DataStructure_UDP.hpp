@@ -327,6 +327,8 @@ public:
 
 	   	std::string copy=buffer;
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
+		std::cout << "HASH RECIBIDO = " << (int)hash << std::endl;
+		std::cout << "HASH CALCULADO = " << (int)calculated << std::endl;
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
 			Send_Error(server_socket,client_addr,error_msg);
