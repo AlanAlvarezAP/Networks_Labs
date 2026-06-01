@@ -704,6 +704,8 @@ public:
 	    int seq_number =std::atoi(buffer.substr(pos,4).c_str());
 	    pos += 4;
 
+		std::string veri=buffer;
+		veri[7]='F';
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
