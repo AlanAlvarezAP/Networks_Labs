@@ -343,6 +343,7 @@ public:
 		if(order == 1 || (order == 11 && seq_number == 0)){
 			protocol_type = buffer[pos++];
 		    if(protocol_type != 'F'){
+				std::cout << "Omitting..." << std::endl;
 		        return;
 		    }
 			copy[7]='f';
