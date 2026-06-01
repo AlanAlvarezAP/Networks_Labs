@@ -907,7 +907,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	
 	    int first_order = (total_fragments == 1) ? 11 : 1;
 		
-		ProtocolFormat protocol{'0',first_order,seq_numbers++,'U',(int)final_name.size(),final_name,size_dst,nickname_dst,size_msg,msg,0,"",0,""};
+		ProtocolFormat protocol{'0',first_order,seq_numbers++,'U',(int)final_name.size(),final_name,size_dst,nickname_dest,size_msg,msg,0,"",0,""};
 		
 		std::string packet=protocol.ConstructDatagram();
 		
@@ -956,7 +956,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 		
     }
 
-    void Unicast_react(const std::string& buffer) {
+    void Unicast_react(const std::string& buffer,sockaddr_in& server_addr) {
 		std::string senderKey = GetSenderKey(server_addr);
 	    int pos = 0;
 	
@@ -1296,7 +1296,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
                 break;
             }
             case 'u': {
-                Unicast_react(buffer);
+                Unicast_react(buffer,server_addr);
                 break;
             }
             case 't': {
