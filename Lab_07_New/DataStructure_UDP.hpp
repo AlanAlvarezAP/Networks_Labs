@@ -703,7 +703,7 @@ public:
 			std::cout << "=======================================================" << std::endl;
 			sf.packets[i] = packet_2;
 	        sendto(client_socket,packet_2.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
-
+			std::this_thread::sleep_for(std::chrono::microseconds(100));
 			start += frag_size;
 	    }
 		
