@@ -304,15 +304,12 @@ public:
 	
 	        pos += size_msg;
 	
-	        long long size_file =
-	            std::atoll(buffer.substr(pos,11).c_str());
-	
+	        long long size_file =std::atoll(buffer.substr(pos,11).c_str());
 	        pos += 11;
 	
 	        pos += size_file;
 	
-	        long long size_content =
-	            std::atoll(buffer.substr(pos,20).c_str());
+	        long long size_content =std::atoll(buffer.substr(pos,20).c_str());
 	
 	        pos += 20;
 	
@@ -380,8 +377,7 @@ public:
 	    }
 	    std::string content;
 	
-	    if(order == 1 || (order == 11 && seq_number == 0))
-	    {
+	    if(order == 1 || (order == 11 && seq_number == 0)){
 	        char protocol_type = buffer[pos++];
 	
 	        if(protocol_type != 'U'){
@@ -425,6 +421,7 @@ public:
 	
 	        pending_transfers[senderKey].action = 'U';
 	        pending_transfers[senderKey].origin = origin;
+			pending_transfers[senderKey].destination = destination;
 	        pending_transfers[senderKey].fragments.clear();
 	    }
 	
