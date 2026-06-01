@@ -981,7 +981,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    if(order == 1 || (order == 11 && seq_number == 0)){
 	        char protocol_type = buffer[pos++];
 	
-	        if(protocol_type != 'b')
+	        if(protocol_type != 'u')
 	            return;
 	
 	        int size_origin =std::atoi(buffer.substr(pos,3).c_str());
@@ -1007,7 +1007,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	
 	        pending_transfers[senderKey].origin = origin;
 	        pending_transfers[senderKey].total_size = size_msg;
-	        pending_transfers[senderKey].action = 'b';
+	        pending_transfers[senderKey].action = 'u';
 	        pending_transfers[senderKey].fragments.clear();
 	
 	        content = msg;
