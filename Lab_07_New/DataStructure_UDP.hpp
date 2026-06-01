@@ -219,7 +219,7 @@ public:
 		
 	   	pending_transfers[senderKey].fragments.push_back({seq_number, content});
 	   	std::cout << "===================================================================" << std::endl;
-	   	std::cout << "Client Destination received datagram # " << seq_number << " with the content" << buffer << std::endl;
+	   	std::cout << "Server received datagram # " << seq_number << " with the content | " << buffer << std::endl;
 	   	std::cout << "===================================================================" << std::endl;
 	   	auto& transfer = pending_transfers[senderKey];
 		if (order == 11){
@@ -329,7 +329,11 @@ public:
 	    }
 	
 	    pending_transfers[senderKey].fragments.push_back({seq_number,copy});
-	
+		std::cout << "===================================================================" << std::endl;
+	   	std::cout << "Server received datagram # " << seq_number << " with the content | " << buffer << std::endl;
+	   	std::cout << "===================================================================" << std::endl;
+
+		
 	    auto& transfer=pending_transfers[senderKey];
 	
 	    if(order == 11){
@@ -783,7 +787,9 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    auto& transfer = pending_transfers[senderKey];
 	
 	    transfer.fragments.push_back({seq_number,content});
-	
+		std::cout << "===================================================================" << std::endl;
+	   	std::cout << "Client Broadcast Destination received datagram # " << seq_number << " with the content | " << buffer << std::endl;
+	   	std::cout << "===================================================================" << std::endl;
 	    if(order == 11){
 	        transfer.last_seq = seq_number;
 	        transfer.last_received = true;
@@ -886,7 +892,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 		sf.acked.resize(total_fragments,false);
 
 		std::cout << "=======================================================" << std::endl;
-		std::cout << "Client Sending from -> " << protocol.nickname << " to " << protocol.nickname_dest << " with the datagram format of" << std::endl;
+		std::cout << "Client Sending from -> " << protocol.nickname << " to " << protocol.nickname_dest << " with the datagram format of " << std::endl;
 		std::cout << packet << std::endl;
 		std::cout << "=======================================================" << std::endl;
 		
@@ -1001,7 +1007,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 
 	   	pending_transfers[senderKey].fragments.push_back({seq_number, content});
 	   	std::cout << "===================================================================" << std::endl;
-	   	std::cout << "Client Destination received datagram # " << seq_number << " with the content" << buffer << std::endl;
+	   	std::cout << "Client Destination received datagram # " << seq_number << " with the content | " << buffer << std::endl;
 	   	std::cout << "===================================================================" << std::endl;
 	   	auto& transfer = pending_transfers[senderKey];
 		if (order == 11){
