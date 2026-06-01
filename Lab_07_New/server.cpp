@@ -24,9 +24,7 @@ void read_thread_UDP(int SocketFD){
         if(order == 1 || (order == 11 && seq_number == 0)){
             action = datagram[7];
         } else {
-            if(datagram[0] == 'L'){
-                sv_UDP.Cases_Server('L', datagram, SocketFD, sender);
-            }else{
+            if(datagram[0] != 'L'){
                 auto it = sv_UDP.pending_transfers.find(senderKey);
                 if(it == sv_UDP.pending_transfers.end()){
                     std::cout << "ERROR no state for " << senderKey << std::endl;
