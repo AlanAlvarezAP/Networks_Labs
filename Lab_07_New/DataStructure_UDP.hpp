@@ -721,7 +721,7 @@ public:
 	   	std::string origin,destination,file_name,content;
 		std::cout << "Arrived with order -> " << order << " and SEQ # " << seq_number << std::endl;
 		if(order == 1 || (order == 11 && seq_number == 0)){
-			protocol_type = buffer[pos++];
+			protocol_type = veri[pos++];
 		    if(protocol_type != 'F'){
 		        return;
 		    }
