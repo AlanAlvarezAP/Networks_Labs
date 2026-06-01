@@ -51,36 +51,7 @@ std::string GetSenderKey(sockaddr_in& addr){
     return std::string(inet_ntoa(addr.sin_addr)) + ":" + std::to_string(ntohs(addr.sin_port));
 }
 
-void Send_OK(int socket,sockaddr_in& addr){
-    ProtocolFormat p{'0',11,0,'K',0,"",0,"",0,"",0,"",0,""};
 
-    std::string packet = p.ConstructDatagram();
-
-    while(packet.size() < DATAGRAM_SIZE)
-        packet.push_back('#');
-
-    packet[0] = p.Calculate_Checksum_Fragments(packet);
-
-    sendto(socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&addr,sizeof(addr));
-}
-
-void Send_Error(int socket,sockaddr_in& addr,const std::string& msg){
-    ProtocolFormat p{'0',11,0,'E',0,"",0,"",(int)msg.size(),msg,0,"",0,""};
-
-    std::string packet = p.ConstructDatagram();
-
-    while(packet.size() < DATAGRAM_SIZE)
-        packet.push_back('#');
-
-    packet[0] = p.Calculate_Checksum_Fragments(packet);
-
-    sendto(socket,
-           packet.data(),
-           DATAGRAM_SIZE,
-           0,
-           (sockaddr*)&addr,
-           sizeof(addr));
-}
 
 struct SentFile{
     int total_fragments;
@@ -139,6 +110,34 @@ struct TransferState {
 	char action = 0;
     std::vector<std::pair<int,std::string>> fragments;
 };
+
+void Send_OK(int socket,sockaddr_in& addr){
+    ProtocolFormat p{'0',11,0,'K',0,"",0,"",0,"",0,"",0,""};
+
+    std::string packet = p.ConstructDatagram();
+
+    while(packet.size() < DATAGRAM_SIZE){
+        packet.push_back('#');
+	}
+
+    packet[0] = p.Calculate_Checksum_Fragments(packet);
+
+    sendto(socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&addr,sizeof(addr));
+}
+
+void Send_Error(int socket,sockaddr_in& addr,const std::string& msg){
+    ProtocolFormat p{'0',11,0,'E',0,"",0,"",(int)msg.size(),msg,0,"",0,""};
+
+    std::string packet = p.ConstructDatagram();
+
+    while(packet.size() < DATAGRAM_SIZE){
+        packet.push_back('#');
+	}
+
+    packet[0] = p.Calculate_Checksum_Fragments(packet);
+
+    sendto(socket,packet.data(),DATAGRAM_SIZE,0,(sockaddr*)&addr,sizeof(addr));
+}
 
 void print(const std::unordered_map<std::string,sockaddr_in>& clientes){
 	std::cout << "================================" << std::endl;
