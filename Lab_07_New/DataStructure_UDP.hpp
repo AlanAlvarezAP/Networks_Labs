@@ -715,8 +715,6 @@ public:
 
 			start += frag_size;
 	    }
-		
-        sendto(client_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&server_addr, sizeof(server_addr));
     }
 
 void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
