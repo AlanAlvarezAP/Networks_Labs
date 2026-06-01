@@ -470,7 +470,7 @@ public:
 	
 	    int first_order = (total_fragments == 1) ? 11 : 1;
 		
-		ProtocolFormat protocol{'0',first_order,seq_numbers++,'F',final_name.size(),final_name,destination.size(),destination,0,"",(long long)file_name.size(),file_name,(long long)complete_file.size(),complete_file.substr(0,current_size)};
+		ProtocolFormat protocol{'0',first_order,seq_numbers++,'F',(int)final_name.size(),final_name,(int)destination.size(),destination,0,"",(long long)file_name.size(),file_name,(long long)complete_file.size(),complete_file.substr(0,current_size)};
 		
 		std::string packet=protocol.ConstructDatagram();
 		
