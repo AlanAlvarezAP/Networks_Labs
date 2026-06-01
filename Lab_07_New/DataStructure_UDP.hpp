@@ -477,7 +477,7 @@ public:
 		while(packet.size() < DATAGRAM_SIZE){
 			packet.push_back('#');
 		}
-		packet[0]=protocol.hash=Calculate_Checksum_Fragments(packet);
+		packet[0]=protocol.hash=protocol.Calculate_Checksum_Fragments(packet);
 
 		SentFile sf;
 		sf.total_fragments = total_fragments;
