@@ -201,8 +201,8 @@ public:
 		    }
 		    pending_transfers.erase(senderKey);
 			client_map[nickname] = client_addr;
-            char k = 'K';
-            sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));
+            /*char k = 'K';
+            sendto(server_socket, &k, 1, 0, (sockaddr*)&client_addr, sizeof(client_addr));*/
 	        print(client_map);
 		}
         
