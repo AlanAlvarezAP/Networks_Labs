@@ -392,7 +392,7 @@ public:
 	        return;
 	    }
 
-	   	pending_transfers[senderKey].fragments.push_back({seq_number, buffer});
+	   	pending_transfers[senderKey].fragments.push_back({seq_number, copy});
 	   	std::cout << "===================================================================" << std::endl;
 	   	std::cout << "Server received datagram # " << seq_number << " with the content" << copy << std::endl;
 	   	std::cout << "===================================================================" << std::endl;
