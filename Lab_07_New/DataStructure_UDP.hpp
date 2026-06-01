@@ -706,9 +706,7 @@ public:
 	    int seq_number =std::atoi(buffer.substr(pos,4).c_str());
 	    pos += 4;
 
-		std::string veri=buffer;
-		veri[7]='F';
-		char calculated = Calculate_Checksum(veri.substr(7, DATAGRAM_SIZE - 7));
+		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 		std::cout << "HASH RECIBIDO = " << (int)hash << std::endl;
 		std::cout << "HASH CALCULADO = " << (int)calculated << std::endl;
 	    if(hash != calculated){
@@ -725,7 +723,7 @@ public:
 	   	std::string origin,destination,file_name,content;
 		std::cout << "Arrived with order -> " << order << " and SEQ # " << seq_number << std::endl;
 		if(order == 1 || (order == 11 && seq_number == 0)){
-			protocol_type = veri[pos++];
+			protocol_type = buffer[pos++];
 		    if(protocol_type != 'F'){
 		        return;
 		    }
