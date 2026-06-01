@@ -24,12 +24,17 @@ void read_thread_UDP(int SocketFD){
         if(order == 1 || (order == 11 && seq_number == 0)){
             action = datagram[7];
         } else {
-            auto it = sv_UDP.pending_transfers.find(senderKey);
-            if(it == sv_UDP.pending_transfers.end()){
-                std::cout << "ERROR no state for " << senderKey << std::endl;
-                continue;
+            if(datagram[0] == 'L'){
+                sv_UDP.Cases_Server('L', datagram, SocketFD, sender);
+            }else{
+                auto it = sv_UDP.pending_transfers.find(senderKey);
+                if(it == sv_UDP.pending_transfers.end()){
+                    std::cout << "ERROR no state for " << senderKey << std::endl;
+                    continue;
+                }
+                action = it->second.action;
             }
-            action = it->second.action;
+            
         }
 
         sv_UDP.Cases_Server(action, datagram, SocketFD, sender);
