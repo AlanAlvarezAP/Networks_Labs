@@ -456,14 +456,78 @@ public:
     }
 
     void Send_List(int server_socket, sockaddr_in& client_addr) {
-        json js;
-        js["clients"] = json::array();
-        for (const auto& pair : client_map) {
-            js["clients"].push_back(pair.first);
-        }
-        std::string to_send = js.dump();
-        std::string final_msg = "t" + number_to_string_2((int)to_send.size(), 5) + to_send;
-        sendto(server_socket, final_msg.data(), final_msg.size(), 0, (sockaddr*)&client_addr, sizeof(client_addr));
+		json js;
+		js["clients"] = json::array();
+	
+		for(const auto& pair : client_map){
+			js["clients"].push_back(pair.first);
+		}
+	
+		std::string json_msg = js.dump();
+		int size_msg = json_msg.size();
+	
+		std::string requester_name;
+		for(const auto& client : client_map){
+			if(client.second.sin_addr.s_addr == client_addr.sin_addr.s_addr && client.second.sin_port == client_addr.sin_port){
+				requester_name = client.first;
+				break;
+			}
+		}
+	
+		int seq_numbers = 0;
+		int header =7+1+3+requester_name.size()+3+requester_name.size()+5+size_msg+11+20;
+	
+		int remaining_size_first = DATAGRAM_SIZE - header;
+		int current_size = std::min(remaining_size_first, size_msg);
+	
+		int total_remaining = size_msg - current_size;
+		int max_content = DATAGRAM_SIZE - 7;
+	
+		int extra_fragments =(total_remaining + max_content - 1) / max_content;
+	
+		int total_fragments = 1 + extra_fragments;
+	
+		int first_order =(total_fragments == 1) ? 11 : 1;
+	
+		ProtocolFormat protocol{'0',first_order,seq_numbers++,'t',(int)requester_name.size(),requester_name,(int)requester_name.size(),requester_name,size_msg,json_msg,0,"",0,""};
+	
+		std::string packet = protocol.ConstructDatagram();
+	
+		while(packet.size() < DATAGRAM_SIZE){
+			packet.push_back('#');
+		}
+	
+		packet[0] = protocol.Calculate_Checksum_Fragments(packet);
+		std::cout << "=======================================================" << std::endl;
+		std::cout << "Server Sending List to -> " << protocol.nickname_dest << " with the datagram format of" << std::endl;
+		std::cout << packet << std::endl;
+		std::cout << "=======================================================" << std::endl;
+		sendto(server_socket,packet.data(),DATAGRAM_SIZE, 0,(sockaddr*)&client_addr,sizeof(client_addr));
+	
+		int start = current_size;
+		for(int i = 1; i < total_fragments; i++){
+			int frag_size =std::min(max_content,size_msg - start);
+			std::string fragment =json_msg.substr(start, frag_size);
+	
+			int frag_order =(i == total_fragments - 1) ? 11 : 0;
+			ProtocolFormat_Normal protocol_normal{'0',frag_order,seq_numbers++,fragment};
+	
+			std::string packet2 =protocol_normal.ConstructDatagram();
+	
+			while(packet2.size() < DATAGRAM_SIZE){
+				packet2.push_back('#');
+			}
+	
+			packet2[0] =protocol_normal.Calculate_Checksum_Fragments(packet2);
+			std::cout << "=======================================================" << std::endl;
+			std::cout << "Server Sending List fragment # " << i << " to -> with the datagram format of" << std::endl;
+			std::cout << packet2 << std::endl;
+			std::cout << "=======================================================" << std::endl;
+			sendto(server_socket,packet2.data(),DATAGRAM_SIZE,0,(sockaddr*)&client_addr,sizeof(client_addr));
+	
+			start += frag_size;
+		}
+		
     }
 
    void File_redirect(const std::string& buffer,int server_socket,sockaddr_in& client_addr){
@@ -1046,15 +1110,100 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    }
     }
 
-    void JSON_react(const std::string& buffer) {
-        std::string size_str = buffer.substr(1, 5);
-        int size_json = std::atoi(size_str.c_str());
-        
-        std::string json_str = buffer.substr(6, size_json);
-        json js = json::parse(json_str);
-        std::cout << js.dump(4) << std::endl;
-    }
-
+    void JSON_react(const std::string& buffer, sockaddr_in& server_addr){
+	    std::string senderKey = GetSenderKey(server_addr);
+	    int pos = 0;
+	    char hash = buffer[0];
+	    pos += 1;
+	
+	    int order = std::atoi(buffer.substr(pos,2).c_str());
+	    pos += 2;
+	
+	    int seq_number = std::atoi(buffer.substr(pos,4).c_str());
+	    pos += 4;
+	
+	    char calculated =Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
+	
+	    if(hash != calculated){
+	        std::string error_msg= "ERROR CHECKSUM";
+			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
+			std::string packet=protocol.ConstructDatagram();
+			Error(packet);
+	        return;
+	    }
+	
+	    std::string content;
+	    if(order == 1 || (order == 11 && seq_number == 0)){
+	        char protocol_type = buffer[pos++];
+	
+	        if(protocol_type != 't'){
+	            return;
+	        }
+	
+	        int size_origin =std::atoi(buffer.substr(pos,3).c_str());
+	        pos += 3;
+	
+	        std::string origin =buffer.substr(pos,size_origin);
+	        pos += size_origin;
+	
+	        int size_dest =std::atoi(buffer.substr(pos,3).c_str());
+	        pos += 3;
+	
+	        std::string destination =buffer.substr(pos,size_dest);
+	        pos += size_dest;
+	
+	        int size_msg =std::atoi(buffer.substr(pos,5).c_str());
+	        pos += 5;
+	
+	        std::string msg =buffer.substr(pos,size_msg);
+	        pos += size_msg;
+	
+	        pos += 11;
+	        pos += 20;
+	
+	        pending_transfers[senderKey].origin = origin;
+	        pending_transfers[senderKey].destination = destination;
+	        pending_transfers[senderKey].total_size = size_msg;
+	        pending_transfers[senderKey].action = 't';
+	        pending_transfers[senderKey].fragments.clear();
+	
+	        content = msg;
+	    }
+	    else{
+	        content = buffer.substr(7,DATAGRAM_SIZE-7);
+	    }
+	
+	    auto& transfer = pending_transfers[senderKey];
+	    transfer.fragments.push_back({seq_number,content});
+	
+	    std::cout << "===================================================================" << std::endl;
+	    std::cout << "Client received JSON fragment # " << seq_number << std::endl;
+	    std::cout << "===================================================================" << std::endl;
+	
+	    if(order == 11){
+	        transfer.last_seq = seq_number;
+	        transfer.last_received = true;
+	    }
+	
+	    if(transfer.last_received &&(int)transfer.fragments.size() == transfer.last_seq + 1){
+	        std::sort(transfer.fragments.begin(),transfer.fragments.end(),[](const auto& a,const auto& b){return a.first < b.first;});
+	        std::string final_json;
+	        long long copied = 0;
+	
+	        for(auto& fragment : transfer.fragments){
+	            long long remaining =transfer.total_size - copied;
+	            long long to_copy =std::min((long long)fragment.second.size(),remaining);
+	            final_json.append(fragment.second.data(),to_copy);
+	            copied += to_copy;
+	        }
+	       	json js = json::parse(final_json);
+			std::cout << "==============================================" << std::endl;
+			std::cout << "Client received list: " << js.dump(4) << std::endl;
+			std::cout << "===============================================" << std::endl;
+	
+	        pending_transfers.erase(senderKey);
+	    }
+	}
     void Send_File(int client_socket,sockaddr_in& server_addr,std::string& file_name,std::string& destination){
 	    int seq_numbers{0};
 		std::ifstream file(file_name,std::ios::binary);
@@ -1296,7 +1445,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
                 break;
             }
             case 't': {
-                JSON_react(buffer);
+                JSON_react(buffer, server_addr);
                 break;
             }
             case 'f': {
