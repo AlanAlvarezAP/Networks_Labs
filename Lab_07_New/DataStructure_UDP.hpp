@@ -166,6 +166,7 @@ public:
 
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
+			std::string error_msg = "ERROR CHECKSUM";
 			Send_Error(server_socket,client_addr,error_msg);
 	        return "";
 	    }
@@ -705,7 +706,9 @@ public:
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
-			Send_Error(server_socket,client_addr,error_msg);
+			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
+			std::string packet=protocol.ConstructDatagram();
+			Error(packet);
 	        return;
 	    }
 	   
@@ -760,7 +763,9 @@ public:
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
 		   	std::string error_msg ="ERROR: no transfer state for"+std::string{senderKey};
-		   	Send_Error(server_socket,client_addr,error_msg);
+		   	ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
+			std::string packet=protocol.ConstructDatagram();
+			Error(packet);
 	        return;
 	    }
 
