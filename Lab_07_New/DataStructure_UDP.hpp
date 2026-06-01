@@ -336,7 +336,7 @@ public:
 	    }
 
 		copy[7]='f';
-		char calculated = Calculate_Checksum(copy.substr(7, DATAGRAM_SIZE - 7));
+		calculated = Calculate_Checksum(copy.substr(7, DATAGRAM_SIZE - 7));
 	   	copy[0]=calculated;
 	   
 	   	int size_origin,size_dest,size_msg;
