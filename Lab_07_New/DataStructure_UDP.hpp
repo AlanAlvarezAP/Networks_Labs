@@ -707,6 +707,8 @@ public:
 		std::string veri=buffer;
 		veri[7]='F';
 		char calculated = Calculate_Checksum(veri.substr(7, DATAGRAM_SIZE - 7));
+		std::cout << "RECIBIDO" << buffer << "HASH RECIBIDO = " << (int)hash << std::endl;
+		std::cout << "RECIBIDO" << veri << HASH CALCULADO = " << (int)calculated << std::endl;
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
 			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
