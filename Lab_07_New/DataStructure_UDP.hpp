@@ -580,6 +580,7 @@ public:
 			pending_transfers[senderKey].destination = destination;
 			pending_transfers[senderKey].file_name = file_name;
 			pending_transfers[senderKey].total_size= size_content;
+			pending_transfers[senderKey].action = 'f';
 			pending_transfers[senderKey].origin=origin;
         	pending_transfers[senderKey].fragments.clear();
 		}else {
