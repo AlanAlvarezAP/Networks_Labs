@@ -335,9 +335,6 @@ public:
 	        return;
 	    }
 
-		copy[7]='f';
-		calculated = Calculate_Checksum(copy.substr(7, DATAGRAM_SIZE - 7));
-	   	copy[0]=calculated;
 	   
 	   	int size_origin,size_dest,size_msg;
 	    long long size_file_name,size_content;
@@ -348,7 +345,9 @@ public:
 		    if(protocol_type != 'F'){
 		        return;
 		    }
-		
+			copy[7]='f';
+			calculated = Calculate_Checksum(copy.substr(7, DATAGRAM_SIZE - 7));
+		   	copy[0]=calculated;
 		    size_origin =std::atoi(buffer.substr(pos,3).c_str());
 		    pos += 3;
 		
