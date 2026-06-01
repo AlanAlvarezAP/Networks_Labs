@@ -609,7 +609,7 @@ public:
 		}
 	   	static bool first_time=true;
 	   	if(first_time){
-			copy[10]='X';
+			copy[40]='X';
 			first_time = false;
 		}
 		
