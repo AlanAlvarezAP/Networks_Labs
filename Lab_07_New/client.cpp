@@ -55,11 +55,24 @@ void read_thread_UDP(int SocketFD){
         }
 
 		std::string datagram(buffer,n);
-		if(datagram.size() > 8 && datagram[8]=='F'){
-			clp_UDP.Cases_Client_UDP('f',datagram,SocketFD,sender);
-		}else{
-			clp_UDP.Cases_Client_UDP(datagram[0],datagram,SocketFD,sender);
-		}
+		std::string senderKey = GetSenderKey(sender);
+
+        int order      = std::atoi(datagram.substr(1, 2).c_str());
+        int seq_number = std::atoi(datagram.substr(3, 4).c_str());
+
+        char action;
+        if(order == 1 || (order == 11 && seq_number == 0)){
+            action = datagram[7];
+        } else {
+            auto it = clp_UDP.pending_transfers.find(senderKey);
+            if(it == clp_UDP.pending_transfers.end()){
+                std::cout << "ERROR no state for " << senderKey << std::endl;
+                continue;
+            }
+            action = it->second.action;
+        }
+
+        clp_UDP.Cases_Client_UDP(action, datagram, SocketFD, sender);
 		
     }
 }
