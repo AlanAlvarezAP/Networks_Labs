@@ -1078,7 +1078,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
                 break;
             }
             case 'b': {
-                Broadcast_react(buffe,server_addr);
+                Broadcast_react(buffer,server_addr);
                 break;
             }
             case 'u': {
