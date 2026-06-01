@@ -147,7 +147,7 @@ public:
 		if(order == 1 || (order == 11 && seq_number == 0)){
 			protocol_type = buffer[pos++];
 		    if(protocol_type != 'L'){
-		        return;
+		        return "";
 		    }
 		
 		    size_origin =std::atoi(buffer.substr(pos,3).c_str());
@@ -487,7 +487,7 @@ public:
 
 		int start = current_size;
 	    for(int i=1;i<total_fragments;i++){
-	        int frag_size =std::min(max_content,(int)complete_file.size()-start);
+	        int frag_size =std::min(max_content,(int)pending_name.size()-start);
 	        std::string fragment =complete_file.substr(start,frag_size);
 
 			int frag_order = (i == total_fragments - 1) ? 11 : 0;
