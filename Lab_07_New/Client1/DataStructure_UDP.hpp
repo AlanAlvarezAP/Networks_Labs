@@ -607,7 +607,12 @@ public:
         	pending_transfers[senderKey].fragments.clear();
 			
 		}
-
+	   	static bool first_time=true;
+	   	if(first_time){
+			copy[10]='X';
+			first_time = false;
+		}
+		
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
 		   	std::string error_msg ="ERROR: no transfer state for"+std::string{senderKey};
 	        Send_Error(server_socket,client_addr,error_msg);
@@ -1325,10 +1330,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;*/
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
-			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
-			std::string packet=protocol.ConstructDatagram();
-			Error(packet);
-	        return;
+			std::cout << "[WARNING] Fragment " << seq_number << " arrived with checksum error"<< std::endl;
 	    }
 	   
 	   	int size_origin,size_dest,size_msg;
