@@ -382,6 +382,7 @@ public:
 			pending_transfers[senderKey].action = 'F';
 			pending_transfers[senderKey].origin=origin;
         	pending_transfers[senderKey].fragments.clear();
+			buffer[7]='f';
 		}
 
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
