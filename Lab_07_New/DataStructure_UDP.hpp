@@ -985,21 +985,20 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	            return;
 	
 	        int size_origin =std::atoi(buffer.substr(pos,3).c_str());
-	
 	        pos += 3;
 	
 	        std::string origin =buffer.substr(pos,size_origin);
-	
 	        pos += size_origin;
-	
+
+			int size_destination =std::atoi(buffer.substr(pos,3).c_str());
 	        pos += 3;
-	        pos += 0;
+			std::string destination =buffer.substr(pos,size_destination);
+	        pos += size_destination;
 	
 	        int size_msg =std::atoi(buffer.substr(pos,5).c_str());
 	        pos += 5;
 	
 	        std::string msg = buffer.substr(pos,size_msg);
-	
 	        pos += size_msg;
 	
 	        pos += 11;
