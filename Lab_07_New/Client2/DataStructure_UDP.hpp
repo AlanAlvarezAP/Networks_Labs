@@ -44,7 +44,7 @@ char Calculate_Checksum(std::string content){
         sum += c;
 	}
 
-    return static_cast<char>(sum % 7);
+    return static_cast<char>(sum % 7) + '0';
 }
 
 std::string GetSenderKey(sockaddr_in& addr){
@@ -166,9 +166,8 @@ public:
 
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
 	    if(hash != calculated){
-			std::string error_msg = "ERROR CHECKSUM";
+			std::string error_msg = "[WARNING] CHECKSUM";
 			Send_Error(server_socket,client_addr,error_msg);
-	        return "";
 	    }
 	   
 	   	int size_origin,size_dest,size_msg;
@@ -263,26 +262,23 @@ public:
 	
 	    std::string copy = buffer;
 	
-	    char calculated =
-	        Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
+	    char calculated = Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
 	
 	    if(hash != calculated){
-	        Send_Error(server_socket,client_addr,"ERROR CHECKSUM");
-	        return;
+	        Send_Error(server_socket,client_addr,"[WARNING] CHECKSUM");
 	    }
 	    std::string content;
 	
-	    if(order == 1 || (order == 11 && seq_number == 0))
-	    {
+	    if(order == 1 || (order == 11 && seq_number == 0)){
 	        char protocol_type = buffer[pos++];
 	
-	        if(protocol_type != 'B')
+	        if(protocol_type != 'B'){
 	            return;
+			}
 	
 	        copy[7] = 'b';
 	
-	        calculated =
-	            Calculate_Checksum(copy.substr(7,DATAGRAM_SIZE-7));
+	        calculated = Calculate_Checksum(copy.substr(7,DATAGRAM_SIZE-7));
 	
 	        copy[0] = calculated;
 	
@@ -372,8 +368,7 @@ public:
 	        Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
 	
 	    if(hash != calculated){
-	        Send_Error(server_socket,client_addr,"ERROR CHECKSUM");
-	        return;
+	        Send_Error(server_socket,client_addr,"[WARNING] CHECKSUM");
 	    }
 	    std::string content;
 	
@@ -543,15 +538,13 @@ public:
 
 	   	std::string copy=buffer;
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
-		/*std::cout << "RECEIVE HASH = " << (int)hash << std::endl;
-		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;*/
+		std::cout << "RECEIVE HASH = " << (int)hash << std::endl;
+		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;
 	    if(hash != calculated){
-	        std::string error_msg = "ERROR CHECKSUM";
+	        std::string error_msg = "[WARNING] CHECKSUM";
 			Send_Error(server_socket,client_addr,error_msg);
-	        return;
 	    }
 
-	   
 	   	int size_origin,size_dest,size_msg;
 	    long long size_file_name,size_content;
 	   	char protocol_type;
@@ -607,11 +600,11 @@ public:
         	pending_transfers[senderKey].fragments.clear();
 			
 		}
-	   	static bool first_time=true;
+	   	/*static bool first_time=true;
 	   	if(first_time){
 			copy[480]='X';
 			first_time = false;
-		}
+		}*/
 		
 	   if(pending_transfers.find(senderKey) == pending_transfers.end()){
 		   	std::string error_msg ="ERROR: no transfer state for"+std::string{senderKey};
@@ -621,7 +614,7 @@ public:
 
 	   	pending_transfers[senderKey].fragments.push_back({seq_number, copy});
 	   	std::cout << "===================================================================" << std::endl;
-	   	std::cout << "Server received datagram # " << seq_number << " with the content" << copy << std::endl;
+	   	std::cout << "Server received datagram # " << seq_number << " with the content | " << copy << std::endl;
 	   	std::cout << "===================================================================" << std::endl;
 	   auto& transfer = pending_transfers[senderKey];
 	   	if (order == 11){
@@ -652,7 +645,6 @@ public:
 	
 	    if(hash != calculated){
 	        Send_Error(server_socket,client_addr,"ERROR CHECKSUM");
-	        return;
 	    }
 	
 	    if(!(order == 11 && seq_number == 0)){
@@ -672,7 +664,10 @@ public:
 	    nickname =buffer.substr(pos,nickname_size);
 	    pos += nickname_size;
 	    bool found = false;
-	
+
+		std::cout << "===================================================================" << std::endl;
+	   	std::cout << "Server received datagram # " << seq_number << " with the content | " << buffer << std::endl;
+	   	std::cout << "===================================================================" << std::endl;
 	    for(auto it = client_map.begin();it != client_map.end();++it){
 	        if(it->second.sin_addr.s_addr ==client_addr.sin_addr.s_addr &&it->second.sin_port ==client_addr.sin_port){
 	            found = true;
@@ -745,7 +740,11 @@ public:
 	    pos += 5;
 	
 	    std::string error_msg =buffer.substr(pos,msg_size);
-	
+
+		std::cout << "===================================================================" << std::endl;
+	   	std::cout << "Client received error with the content | " << buffer << std::endl;
+	   	std::cout << "===================================================================" << std::endl;
+		
 	    std::cout<< "ERROR -> "<< error_msg<< std::endl;
     }
 
@@ -903,11 +902,10 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    char calculated =Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
 	
 	    if(hash != calculated){
-	        std::string error_msg= "ERROR CHECKSUM";
+	        std::string error_msg= "[WARNING] CHECKSUM";
 			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
 			std::string packet=protocol.ConstructDatagram();
 			Error(packet);
-	        return;
 	    }
 	
 	    std::string content;
@@ -1069,11 +1067,10 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    char calculated =Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
 	
 	    if(hash != calculated){
-	        std::string error_msg= "ERROR CHECKSUM";
+	        std::string error_msg= "[WARNING] CHECKSUM";
 			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
 			std::string packet=protocol.ConstructDatagram();
 			Error(packet);
-	        return;
 	    }
 	
 	    std::string content;
@@ -1161,11 +1158,10 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    char calculated =Calculate_Checksum(buffer.substr(7,DATAGRAM_SIZE-7));
 	
 	    if(hash != calculated){
-	        std::string error_msg= "ERROR CHECKSUM";
+	        std::string error_msg= "[WARNING] CHECKSUM";
 			ProtocolFormat protocol{'0',11,0,'E',0,"",0,"",(int)error_msg.size(),error_msg,0,"",0,""};
 			std::string packet=protocol.ConstructDatagram();
 			Error(packet);
-	        return;
 	    }
 	
 	    std::string content;
@@ -1326,8 +1322,8 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    pos += 4;
 
 		char calculated = Calculate_Checksum(buffer.substr(7, DATAGRAM_SIZE - 7));
-		/*std::cout << "RECEIVED HASH = " << (int)hash << std::endl;
-		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;*/
+		std::cout << "RECEIVED HASH = " << (int)hash << std::endl;
+		std::cout << "CALCULATED HASH = " << (int)calculated << std::endl;
 	    if(hash != calculated){
 	        std::string error_msg = "ERROR CHECKSUM";
 			std::cout << "[WARNING] Fragment " << seq_number << " arrived with checksum error"<< std::endl;
