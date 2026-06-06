@@ -1300,7 +1300,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	        packet_2[0]=protocol_normal.hash=protocol_normal.Calculate_Checksum_Fragments(packet_2);
 			std::cout << (int)protocol_normal.hash << " - " << (int)packet_2[0] << std::endl;
 			std::cout << "=======================================================" << std::endl;
-			std::cout << "Client Sending ----> Fragment #" << i+1 << " | " << packet_2 << std::endl;
+			std::cout << "Client Sending ----> Fragment #" << i << " | " << packet_2 << std::endl;
 			std::cout << "=======================================================" << std::endl;
 			sf.packets[i] = packet_2;
 	        sendto(client_socket,packet_2.data(),DATAGRAM_SIZE,0,(sockaddr*)&server_addr,sizeof(server_addr));
