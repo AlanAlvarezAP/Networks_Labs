@@ -1209,7 +1209,7 @@ void Broadcast_react(const std::string& buffer,sockaddr_in& server_addr){
 	    transfer.fragments.push_back({seq_number,content});
 	
 	    std::cout << "===================================================================" << std::endl;
-	    std::cout << "Client received JSON fragment # " << seq_number << " with content of: " std::endl;
+	    std::cout << "Client received JSON fragment # " << seq_number << " with content of: " << std::endl;
 		std::cout << buffer << std::endl;
 	    std::cout << "===================================================================" << std::endl;
 	
