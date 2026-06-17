@@ -170,6 +170,7 @@ public:
 	}
 
 	void File_redirect(int n,int SocketFD){
+		auto process_start = std::chrono::high_resolution_clock::now();
 	    std::string content, file_name, dest, orig;
 	    long size_content, size_file_name, size_dest, size_orig;
 	 
@@ -279,6 +280,14 @@ public:
 	    }
 	 
 	    write(little_map[dest], final_msg.data(), final_msg.size());
+
+		auto process_end = std::chrono::high_resolution_clock::now();
+		double processing_time_ms = std::chrono::duration<double,std::milli>(process_end - process_start).count();
+		
+		std::string value =std::to_string(processing_time_ms);
+		
+		std::string stat_msg = "P" + number_to_string(value.size(),5) + value;
+		write(little_map[orig],stat_msg.data(),stat_msg.size());
 	}
 
 	void Cases_Server(char type, int n, int SocketFD) {
@@ -645,13 +654,6 @@ public:
 	        + file_name
 	        + number_to_string(size_orig, 5)
 	        + origin;
-	 
-	    std::cout << "========== Stadistics of Message ==========" << std::endl;
-	    std::cout << "Total size of msg : " << protocolo_recibido.size() << " bytes" << std::endl;
-	    std::cout << "Server resending packets " << std::endl;
-		std::cout << "Amount of packets sent " << protocolo_recibido.size()/500L << std::endl;
-	    std::cout << "From: " << origin << " -> To: here" << std::endl;
-	    std::cout << "Name file: " << file_name << std::endl;
 	    
 	    if(protocolo_recibido.size() >= 500) {
 	        std::string primeros_500 = protocolo_recibido.substr(0, 500);
@@ -671,9 +673,30 @@ public:
 	    std::ofstream ofs("2" + file_name, std::ios::binary);
 	    ofs.write(file.data(), file.size());
 
-		auto process_end = std::chrono::high_resolution_clock::now();	
-		stats.processing_time_ms = std::chrono::duration<double,std::milli>(process_end - stats.process_start).count();
-		Cases_Client('A',n,SocketFD);
+	}
+
+	void Processing_Receive(int n,int SocketFD){
+	    char buffer[256];
+	    n = read(SocketFD,buffer,5);
+	    buffer[n]='\0';
+	
+	    int size = std::atoi(buffer);
+	
+	    n = read(SocketFD,buffer,size);
+	    buffer[n]='\0';
+	
+	    stats.processing_time_ms = std::stod(buffer);
+	
+	    std::cout << "========== STATISTICS ==========" << std::endl;
+	    std::cout << "Processing Time : " << stats.processing_time_ms << " ms" << std::endl;
+	    std::cout << "RTT : " << stats.rtt_ms << " ms" << std::endl;
+	    std::cout << "Ping : " << stats.ping_ms << " ms" << std::endl;
+	    std::cout << "File Size : " << stats.file_size << " bytes" << std::endl;
+	    std::cout << "Packets : " << stats.packets << std::endl;
+	
+	    std::cout << "Theoretical RTTs : " << stats.theoretical_rtts << std::endl;
+	
+	    std::cout << "================================" << std::endl;
 	}
 
 	void Cases_Client(char type, int n, int SocketFD) {
@@ -748,15 +771,8 @@ public:
 				File_read(n,SocketFD);
 				break;
 			}
-			case 'A':{
-			    std::cout << "========== STATISTICS ==========" << std::endl;
-			    std::cout << "Processing Time : " << stats.processing_time_ms << " ms" << std::endl;
-			    std::cout << "RTT : " << stats.rtt_ms << " ms" << std::endl;
-			    std::cout << "Ping : " << stats.ping_ms << " ms" << std::endl;
-			    std::cout << "File Size : " << stats.file_size << " bytes" << std::endl;
-			    std::cout << "Packets : " << stats.packets << std::endl;
-			    std::cout << "Theoretical RTTs : " << stats.theoretical_rtts  << std::endl;
-			    std::cout << "================================" << std::endl;
+			case 'P':{
+			    Processing_Receive(n,SocketFD);
 			    break;
 			}
 			default: {
