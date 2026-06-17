@@ -204,7 +204,7 @@ public:
 	        chunk_num++;
 	 
 	        if(chunk_num == 1){
-	            std::cout << "First block sent with " << readed << " bytes with content " << buffer << std::endl;
+	            std::cout << "First block sent with " << n << " bytes with content " << buffer << std::endl;
 	        }
 	    }
 	 
@@ -564,8 +564,9 @@ public:
 	        chunk_num++;
 	 
 	        if(chunk_num == 1){
-	            std::cout << "Primer bloque recibido en File_read: " << n << " bytes" << std::endl;
+	            std::cout << "First block sent with " << n << " bytes with content " << buffer << std::endl;
 	        }
+	        
 	    }
 	 
 	    if(read(SocketFD, size_buf, 5) <= 0){
@@ -623,7 +624,7 @@ public:
 	 
 	    if(protocolo_recibido.size() > 500) {
 	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
-			std::cout << "First block sent with " << readed << " bytes with content " << last_500 << std::endl;
+			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
 	 
 	    std::cout << "FILE: " << file_name << std::endl << "FROM: " << origin << std::endl;
