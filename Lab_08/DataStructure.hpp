@@ -262,14 +262,6 @@ public:
 	        + file_name
 	        + number_to_string((long)orig.size(), 5)
 	        + orig;
-	 
-
-	    std::cout << "========== Stadistics of Message ==========" << std::endl;
-	    std::cout << "Total size of msg : " << final_msg.size() << " bytes" << std::endl;
-	    std::cout << "Server resending packets " << std::endl;
-		std::cout << "Amount of packets sent " << final_msg.size()/500L << std::endl;
-	    std::cout << "From: " << orig << " -> To: " << dest << std::endl;
-	    std::cout << "Name file: " << file_name << std::endl;
 	    
 	    if(final_msg.size() >= 500) {
 	        std::string primeros_500 = final_msg.substr(0, 500);
@@ -285,7 +277,6 @@ public:
 	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
 	        std::cout << ultimos_500 << std::endl;
 	    }
-	    std::cout << "================================================\n" << std::endl;
 	 
 	    write(little_map[dest], final_msg.data(), final_msg.size());
 	}
@@ -354,9 +345,23 @@ public:
 
 };
 
+struct Statistics {
+    double processing_time_ms = 0;
+    double rtt_ms = 0;
+    double ping_ms = 0;
+
+    long file_size = 0;
+    long packets = 0;
+    long theoretical_rtts = 0;
+
+	std::chrono::high_resolution_clock::time_point process_start;
+    std::chrono::high_resolution_clock::time_point rtt_start;
+};
+
 class Client_Protocols {
 public:
 	bool logging_status = false,running=false;
+	Statistics stats;
 	void Error(int n, int SocketFD) {
 		char buffer[256];
 
@@ -378,6 +383,7 @@ public:
 		std::getline(std::cin, name);
 		int size_msg = name.size();
 		std::string final_msg = "L" + number_to_string(size_msg, 4) + name;
+		stats.rtt_start = std::chrono::high_resolution_clock::now();
 		write(SocketFD, final_msg.data(), final_msg.size());
 
 	}
@@ -481,6 +487,7 @@ public:
 	}
 
 	void Send_File(int n, int SocketFD, std::string file_name, std::string destination){
+		stats.process_start = std::chrono::high_resolution_clock::now();
 	    const long MAX_SIZE = 999999999;
 	 
 	    std::ifstream file(file_name, std::ios::binary);
@@ -493,17 +500,11 @@ public:
 	    msg.reserve(MAX_SIZE);
 	 
 	    char buffer[500];
-	    int chunk_num = 0;
 	    long total_leido = 0;
 	    
 	    while(file && msg.size() < MAX_SIZE){
 	        file.read(buffer, std::min(500L, MAX_SIZE - (long)msg.size()));
 	        int readed = file.gcount();
-	        chunk_num++;
-	 
-	        if(chunk_num == 1){
-	            std::cout << "First block sent with " << readed << " bytes with content " << buffer << std::endl;
-	        }
 	        
 	        if(readed <= 0){
 	            break;
@@ -530,18 +531,15 @@ public:
 	        + file_name
 	        + number_to_string((long)destination.size(), 5)
 	        + destination;
-	 
+
+		stats.file_size = msg.size();
+		stats.packets = (final_msg.size() + 499) / 500;
+		stats.theoretical_rtts = stats.packets;
+		
 	    if(final_msg.size() > 500) {
 	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
 			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
-
-		std::cout << "========== Stadistics of Message ==========" << std::endl;
-	    std::cout << "Total size of msg : " << final_msg.size() << " bytes" << std::endl;
-	    std::cout << "Server resending packets " << std::endl;
-		std::cout << "Amount of packets sent " << final_msg.size()/500L << std::endl;
-	    std::cout << "From: server" << " -> To: " << destination << std::endl;
-	    std::cout << "Name file: " << file_name << std::endl;
 	    
 	    if(final_msg.size() >= 500) {
 	        std::string primeros_500 = final_msg.substr(0, 500);
@@ -557,7 +555,6 @@ public:
 	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
 	        std::cout << ultimos_500 << std::endl;
 	    }
-	    std::cout << "================================================" << std::endl;
 		
 	    write(SocketFD, final_msg.data(), final_msg.size());
 	}
@@ -582,7 +579,6 @@ public:
 	    file.reserve(size_file);
 	 
 	    char buffer[500];
-	    int chunk_num = 0;
 	    long total = 0;
 	    
 	    while(total < size_file){
@@ -595,11 +591,6 @@ public:
 	 
 	        file.append(buffer, n);
 	        total += n;
-	        chunk_num++;
-	 
-	        if(chunk_num == 1){
-	            std::cout << "First block sent with " << n << " bytes with content " << buffer << std::endl;
-	        }
 	        
 	    }
 	 
@@ -679,6 +670,10 @@ public:
 	    std::cout << "================================================" << std::endl;
 	    std::ofstream ofs("2" + file_name, std::ios::binary);
 	    ofs.write(file.data(), file.size());
+
+		auto process_end = std::chrono::high_resolution_clock::now();	
+		stats.processing_time_ms = std::chrono::duration<double,std::milli>(process_end - stats.process_start).count();
+		Cases_Client('A',n,SocketFD);
 	}
 
 	void Cases_Client(char type, int n, int SocketFD) {
@@ -702,6 +697,9 @@ public:
 					running = false;
 				}
 				else {
+					auto rtt_end = std::chrono::high_resolution_clock::now();
+					stats.rtt_ms = std::chrono::duration<double,std::milli> (rtt_end - stats.rtt_start).count();
+					stats.ping_ms = stats.rtt_ms;
 					logging_status = true;
 				}
 				break;
@@ -737,6 +735,7 @@ public:
 				break;
 			}
 			case 'F':{
+				auto process_start = std::chrono::high_resolution_clock::now();
 				std::string dest,file_nam;
 				std::cout << "Give me the file name ";
 				std::getline(std::cin,file_nam);
@@ -748,6 +747,17 @@ public:
 			case 'f':{
 				File_read(n,SocketFD);
 				break;
+			}
+			case 'A':{
+			    std::cout << "========== STATISTICS ==========" << std::endl;
+			    std::cout << "Processing Time : " << stats.processing_time_ms << " ms" << std::endl;
+			    std::cout << "RTT : " << stats.rtt_ms << " ms" << std::endl;
+			    std::cout << "Ping : " << stats.ping_ms << " ms" << std::endl;
+			    std::cout << "File Size : " << stats.file_size << " bytes" << std::endl;
+			    std::cout << "Packets : " << stats.packets << std::endl;
+			    std::cout << "Theoretical RTTs : " << stats.theoretical_rtts  << std::endl;
+			    std::cout << "================================" << std::endl;
+			    break;
 			}
 			default: {
 				std::cout << "This protocol is not registered in Client :( " << std::endl;
