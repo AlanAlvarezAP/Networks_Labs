@@ -623,7 +623,7 @@ public:
 	        + origin;
 	 
 	    if(protocolo_recibido.size() > 500) {
-	        std::string last_500 = final_msg.substr(protocolo_recibido.size() - 500);
+	        std::string last_500 = protocolo_recibido.substr(protocolo_recibido.size() - 500);
 			std::cout << "First block sent with " << protocolo_recibido.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
 	 
