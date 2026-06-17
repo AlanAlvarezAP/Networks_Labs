@@ -272,7 +272,7 @@ public:
 	    
 	    if(final_msg.size() > 500) {
 	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
-			std::cout << "First block sent with " << readed << " bytes with content " << last_500 << std::endl;
+			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
 	 
 	    write(little_map[dest], final_msg.data(), final_msg.size());
@@ -522,7 +522,7 @@ public:
 	 
 	    if(final_msg.size() > 500) {
 	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
-			std::cout << "First block sent with " << readed << " bytes with content " << last_500 << std::endl;
+			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
 	 
 	    write(SocketFD, final_msg.data(), final_msg.size());
@@ -623,8 +623,8 @@ public:
 	        + origin;
 	 
 	    if(protocolo_recibido.size() > 500) {
-	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
-			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
+	        std::string last_500 = final_msg.substr(protocolo_recibido.size() - 500);
+			std::cout << "First block sent with " << protocolo_recibido.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
 	 
 	    std::cout << "FILE: " << file_name << std::endl << "FROM: " << origin << std::endl;
