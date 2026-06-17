@@ -187,7 +187,6 @@ public:
 	    }
 	    char buffer[500];
 	    long total = 0;
-	    int chunk_num = 0;
 	    content.clear();
 	    content.reserve(size_content);
 	 
@@ -201,11 +200,6 @@ public:
 	 
 	        content.append(buffer, n);
 	        total += n;
-	        chunk_num++;
-	 
-	        if(chunk_num == 1){
-	            std::cout << "First block sent with " << n << " bytes with content " << buffer << std::endl;
-	        }
 	    }
 	 
 	    if(read(SocketFD, size_buf, 5) <= 0){
@@ -269,11 +263,29 @@ public:
 	        + number_to_string((long)orig.size(), 5)
 	        + orig;
 	 
+
+	    std::cout << "========== Stadistics of Message ==========" << std::endl;
+	    std::cout << "Total size of msg : " << final_msg.size() << " bytes" << std::endl;
+	    std::cout << "Server resending packets " << std::endl;
+		std::cout << "Amount of packets sent " << final_msg.size()/500L << std::endl;
+	    std::cout << "From: " << orig << " -> To: " << dest << std::endl;
+	    std::cout << "Name file: " << file_name << std::endl;
+	    
+	    if(final_msg.size() >= 500) {
+	        std::string primeros_500 = final_msg.substr(0, 500);
+	        std::cout << "--- FIRST 500 BYTES OF PROTOCOL ---" << std::endl;
+	        std::cout << primeros_500 << std::endl;
+	    } else {
+	        std::cout << "--- COMPLETE MESSAGE (< 500 bytes) ---" << std::endl;
+	        std::cout << final_msg << std::endl;
+	    }
 	    
 	    if(final_msg.size() > 500) {
-	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
-			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
+	        std::string ultimos_500 = final_msg.substr(final_msg.size() - 500);
+	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
+	        std::cout << ultimos_500 << std::endl;
 	    }
+	    std::cout << "================================================\n" << std::endl;
 	 
 	    write(little_map[dest], final_msg.data(), final_msg.size());
 	}
@@ -503,7 +515,6 @@ public:
 	 
 	    file.close();
 	 
-	    std::cout << "Total de bytes leidos del archivo: " << total_leido << std::endl << std::endl;
 	 
 	    if(file_name.size() > MAX_SIZE)
 	        file_name.resize(MAX_SIZE);
@@ -524,7 +535,30 @@ public:
 	        std::string last_500 = final_msg.substr(final_msg.size() - 500);
 			std::cout << "First block sent with " << final_msg.size() - 500 << " bytes with content " << last_500 << std::endl;
 	    }
-	 
+
+		std::cout << "========== Stadistics of Message ==========" << std::endl;
+	    std::cout << "Total size of msg : " << final_msg.size() << " bytes" << std::endl;
+	    std::cout << "Server resending packets " << std::endl;
+		std::cout << "Amount of packets sent " << final_msg.size()/500L << std::endl;
+	    std::cout << "From: " << orig << " -> To: " << dest << std::endl;
+	    std::cout << "Name file: " << file_name << std::endl;
+	    
+	    if(final_msg.size() >= 500) {
+	        std::string primeros_500 = final_msg.substr(0, 500);
+	        std::cout << "--- FIRST 500 BYTES OF PROTOCOL ---" << std::endl;
+	        std::cout << primeros_500 << std::endl;
+	    } else {
+	        std::cout << "--- COMPLETE MESSAGE (< 500 bytes) ---" << std::endl;
+	        std::cout << final_msg << std::endl;
+	    }
+	    
+	    if(final_msg.size() > 500) {
+	        std::string ultimos_500 = final_msg.substr(final_msg.size() - 500);
+	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
+	        std::cout << ultimos_500 << std::endl;
+	    }
+	    std::cout << "================================================" << std::endl;
+		
 	    write(SocketFD, final_msg.data(), final_msg.size());
 	}
 	void File_read(int n,int SocketFD){
@@ -612,7 +646,6 @@ public:
 	        total += n;
 	    }
 	 
-	    // Construir el mensaje recibido para mostrar los primeros y últimos 500
 	    std::string protocolo_recibido = 
 	        "f"
 	        + number_to_string(size_file, 10)
@@ -622,13 +655,28 @@ public:
 	        + number_to_string(size_orig, 5)
 	        + origin;
 	 
-	    if(protocolo_recibido.size() > 500) {
-	        std::string last_500 = protocolo_recibido.substr(protocolo_recibido.size() - 500);
-			std::cout << "First block sent with " << protocolo_recibido.size() - 500 << " bytes with content " << last_500 << std::endl;
+	    std::cout << "========== Stadistics of Message ==========" << std::endl;
+	    std::cout << "Total size of msg : " << protocolo_recibido.size() << " bytes" << std::endl;
+	    std::cout << "Server resending packets " << std::endl;
+		std::cout << "Amount of packets sent " << protocolo_recibido.size()/500L << std::endl;
+	    std::cout << "From: " << orig << " -> To: " << dest << std::endl;
+	    std::cout << "Name file: " << file_name << std::endl;
+	    
+	    if(protocolo_recibido.size() >= 500) {
+	        std::string primeros_500 = protocolo_recibido.substr(0, 500);
+	        std::cout << "--- FIRST 500 BYTES OF PROTOCOL ---" << std::endl;
+	        std::cout << primeros_500 << std::endl;
+	    } else {
+	        std::cout << "--- COMPLETE MESSAGE (< 500 bytes) ---" << std::endl;
+	        std::cout << protocolo_recibido << std::endl;
 	    }
-	 
-	    std::cout << "FILE: " << file_name << std::endl << "FROM: " << origin << std::endl;
-	 
+	    
+	    if(final_msg.size() > 500) {
+	        std::string ultimos_500 = protocolo_recibido.substr(protocolo_recibido.size() - 500);
+	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
+	        std::cout << ultimos_500 << std::endl;
+	    }
+	    std::cout << "================================================" << std::endl;
 	    std::ofstream ofs("2" + file_name, std::ios::binary);
 	    ofs.write(file.data(), file.size());
 	}
