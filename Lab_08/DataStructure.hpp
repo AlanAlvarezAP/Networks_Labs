@@ -540,7 +540,7 @@ public:
 	    std::cout << "Total size of msg : " << final_msg.size() << " bytes" << std::endl;
 	    std::cout << "Server resending packets " << std::endl;
 		std::cout << "Amount of packets sent " << final_msg.size()/500L << std::endl;
-	    std::cout << "From: " << orig << " -> To: " << dest << std::endl;
+	    std::cout << "From: server" << " -> To: " << destination << std::endl;
 	    std::cout << "Name file: " << file_name << std::endl;
 	    
 	    if(final_msg.size() >= 500) {
@@ -659,7 +659,7 @@ public:
 	    std::cout << "Total size of msg : " << protocolo_recibido.size() << " bytes" << std::endl;
 	    std::cout << "Server resending packets " << std::endl;
 		std::cout << "Amount of packets sent " << protocolo_recibido.size()/500L << std::endl;
-	    std::cout << "From: " << orig << " -> To: " << dest << std::endl;
+	    std::cout << "From: " << origin << " -> To: here" << std::endl;
 	    std::cout << "Name file: " << file_name << std::endl;
 	    
 	    if(protocolo_recibido.size() >= 500) {
@@ -671,7 +671,7 @@ public:
 	        std::cout << protocolo_recibido << std::endl;
 	    }
 	    
-	    if(final_msg.size() > 500) {
+	    if(protocolo_recibido.size() > 500) {
 	        std::string ultimos_500 = protocolo_recibido.substr(protocolo_recibido.size() - 500);
 	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
 	        std::cout << ultimos_500 << std::endl;
