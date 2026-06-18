@@ -279,6 +279,10 @@ public:
 	        std::cout << ultimos_500 << std::endl;
 	    }
 	 
+	    // ENVIAR ACK INMEDIATO AL CLIENTE (PARA RTT CORRECTO)
+	    char ack = 'A';
+	    write(little_map[orig], &ack, 1);
+	    
 	    write(little_map[dest], final_msg.data(), final_msg.size());
 
 		auto process_end = std::chrono::high_resolution_clock::now();
@@ -569,6 +573,14 @@ public:
 	    stats.rtt_start = std::chrono::high_resolution_clock::now();
 	    
 	    write(SocketFD, final_msg.data(), final_msg.size());
+	    
+	    // ESPERAR ACK INMEDIATO DEL SERVIDOR (PARA MEDIR RTT CORRECTO)
+	    char ack;
+	    read(SocketFD, &ack, 1);
+	    
+	    // MARCAR T2 JUSTO AL RECIBIR EL ACK
+	    auto rtt_end = std::chrono::high_resolution_clock::now();
+	    stats.rtt_ms = std::chrono::duration<double,std::milli>(rtt_end - stats.rtt_start).count();
 	}
 
 	void File_read(int n,int SocketFD){
@@ -688,12 +700,8 @@ public:
 	
 	    n = read(SocketFD,buffer,size);
 	    buffer[n]='\0';
-	
+
 	    stats.processing_time_ms = std::stod(buffer);
-	    
-	    // CALCULAR RTT: TIEMPO DESDE QUE SE ENVIÓ HASTA QUE LLEGA LA RESPUESTA
-	    auto rtt_end = std::chrono::high_resolution_clock::now();
-	    stats.rtt_ms = std::chrono::duration<double,std::milli>(rtt_end - stats.rtt_start).count();
 
 	    std::cout << "\n\n" << std::endl;
 	    std::cout << "========== METRICAS DE RED ==========" << std::endl;
