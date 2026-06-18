@@ -284,9 +284,9 @@ public:
 		auto process_end = std::chrono::high_resolution_clock::now();
 		double processing_time_ms = std::chrono::duration<double,std::milli>(process_end - process_start).count();
 		
-		std::string value =std::to_string(processing_time_ms);
+		std::string value = std::to_string(processing_time_ms);
 		
-		std::string stat_msg = "P" + number_to_string(value.size(),5) + value;
+		std::string stat_msg = "P" + number_to_string((long)value.size(),5) + value;
 		write(little_map[orig],stat_msg.data(),stat_msg.size());
 	}
 
@@ -564,9 +564,13 @@ public:
 	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
 	        std::cout << ultimos_500 << std::endl;
 	    }
-		
+	    
+	    // MARCAR TIEMPO T1 ANTES DE ENVIAR (PARA RTT)
+	    stats.rtt_start = std::chrono::high_resolution_clock::now();
+	    
 	    write(SocketFD, final_msg.data(), final_msg.size());
 	}
+
 	void File_read(int n,int SocketFD){
 	    std::string file_name, origin;
 	    long size_file, size_file_name, size_orig;
@@ -686,17 +690,16 @@ public:
 	    buffer[n]='\0';
 	
 	    stats.processing_time_ms = std::stod(buffer);
-	
-	    std::cout << "========== STATISTICS ==========" << std::endl;
-	    std::cout << "Processing Time : " << stats.processing_time_ms << " ms" << std::endl;
-	    std::cout << "RTT : " << stats.rtt_ms << " ms" << std::endl;
-	    std::cout << "Ping : " << stats.ping_ms << " ms" << std::endl;
-	    std::cout << "File Size : " << stats.file_size << " bytes" << std::endl;
-	    std::cout << "Packets : " << stats.packets << std::endl;
-	
-	    std::cout << "Theoretical RTTs : " << stats.theoretical_rtts << std::endl;
-	
-	    std::cout << "================================" << std::endl;
+	    
+	    // CALCULAR RTT: TIEMPO DESDE QUE SE ENVIÓ HASTA QUE LLEGA LA RESPUESTA
+	    auto rtt_end = std::chrono::high_resolution_clock::now();
+	    stats.rtt_ms = std::chrono::duration<double,std::milli>(rtt_end - stats.rtt_start).count();
+
+	    std::cout << "\n\n" << std::endl;
+	    std::cout << "========== METRICAS DE RED ==========" << std::endl;
+	    std::cout << "Nodal (procesamiento del servidor): " << stats.processing_time_ms << " ms" << std::endl;
+	    std::cout << "RTT-Time (ida y vuelta): " << stats.rtt_ms << " ms" << std::endl;
+	    std::cout << "====================================\n" << std::endl;
 	}
 
 	void Cases_Client(char type, int n, int SocketFD) {
@@ -758,7 +761,6 @@ public:
 				break;
 			}
 			case 'F':{
-				auto process_start = std::chrono::high_resolution_clock::now();
 				std::string dest,file_nam;
 				std::cout << "Give me the file name ";
 				std::getline(std::cin,file_nam);
