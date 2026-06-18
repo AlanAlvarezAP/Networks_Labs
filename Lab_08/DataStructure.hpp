@@ -171,7 +171,7 @@ public:
 
 	void File_redirect(int n,int SocketFD){
 	    char ack = 'A';
-	    write(little_map[orig], &ack, 1);
+	    write(SocketFD, &ack, 1);
 		auto process_start = std::chrono::high_resolution_clock::now();
 	    std::string content, file_name, dest, orig;
 	    long size_content, size_file_name, size_dest, size_orig;
