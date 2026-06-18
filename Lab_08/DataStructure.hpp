@@ -170,6 +170,8 @@ public:
 	}
 
 	void File_redirect(int n,int SocketFD){
+	    char ack = 'A';
+	    write(little_map[orig], &ack, 1);
 		auto process_start = std::chrono::high_resolution_clock::now();
 	    std::string content, file_name, dest, orig;
 	    long size_content, size_file_name, size_dest, size_orig;
@@ -278,10 +280,6 @@ public:
 	        std::cout << "--- LAST 500 BYTES OF PROTOCOL ---" << std::endl;
 	        std::cout << ultimos_500 << std::endl;
 	    }
-	 
-	    // ENVIAR ACK INMEDIATO AL CLIENTE (PARA RTT CORRECTO)
-	    char ack = 'A';
-	    write(little_map[orig], &ack, 1);
 	    
 	    write(little_map[dest], final_msg.data(), final_msg.size());
 
@@ -569,16 +567,13 @@ public:
 	        std::cout << ultimos_500 << std::endl;
 	    }
 	    
-	    // MARCAR TIEMPO T1 ANTES DE ENVIAR (PARA RTT)
 	    stats.rtt_start = std::chrono::high_resolution_clock::now();
 	    
 	    write(SocketFD, final_msg.data(), final_msg.size());
 	    
-	    // ESPERAR ACK INMEDIATO DEL SERVIDOR (PARA MEDIR RTT CORRECTO)
 	    char ack;
 	    read(SocketFD, &ack, 1);
 	    
-	    // MARCAR T2 JUSTO AL RECIBIR EL ACK
 	    auto rtt_end = std::chrono::high_resolution_clock::now();
 	    stats.rtt_ms = std::chrono::duration<double,std::milli>(rtt_end - stats.rtt_start).count();
 	}
@@ -703,10 +698,9 @@ public:
 
 	    stats.processing_time_ms = std::stod(buffer);
 
-	    std::cout << "\n\n" << std::endl;
-	    std::cout << "========== METRICAS DE RED ==========" << std::endl;
-	    std::cout << "Nodal (procesamiento del servidor): " << stats.processing_time_ms << " ms" << std::endl;
-	    std::cout << "RTT-Time (ida y vuelta): " << stats.rtt_ms << " ms" << std::endl;
+	    std::cout << "========== METRICS NETWORK ==========" << std::endl;
+	    std::cout << "Nodal (Server Processing): " << stats.processing_time_ms << " ms" << std::endl;
+	    std::cout << "RTT-Time (go and back): " << stats.rtt_ms << " ms" << std::endl;
 	    std::cout << "====================================\n" << std::endl;
 	}
 
